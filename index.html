@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="theme-color" content="#0d7377">
+  <meta name="description" content="USABO 美国生物奥林匹克竞赛课后自主训练平台">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="USABO">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <title>USABO 专题训练</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- ════════════════ 首页 ════════════════ -->
+    <section id="view-home" class="view active">
+      <header class="app-header">
+        <h1>USABO 专题训练</h1>
+        <p class="subtitle">美国生物奥林匹克竞赛 · 课后自主刷题</p>
+      </header>
+
+      <div class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-num" id="stat-total">0</span>
+          <span class="stat-label">已练习</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num" id="stat-accuracy">0%</span>
+          <span class="stat-label">平均正确率</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num" id="stat-wrong">0</span>
+          <span class="stat-label">错题本</span>
+        </div>
+      </div>
+
+      <div class="section-title">
+        <h2>选择训练板块</h2>
+        <button class="select-all-btn" id="btn-select-all">全选</button>
+      </div>
+
+      <div class="topic-grid" id="topic-grid"></div>
+
+      <div class="section-title">
+        <h2>题目数量</h2>
+      </div>
+      <div class="count-options" id="count-options">
+        <button class="count-btn" data-count="10">10 题</button>
+        <button class="count-btn active" data-count="20">20 题</button>
+        <button class="count-btn" data-count="30">30 题</button>
+        <button class="count-btn" data-count="50">50 题</button>
+      </div>
+
+      <div class="section-title">
+        <h2>附加选项</h2>
+      </div>
+      <div class="extra-options">
+        <label class="toggle-label">
+          <input type="checkbox" id="toggle-timer">
+          <span class="toggle-slider"></span>
+          <span class="toggle-text">倒计时模式（每题 60 秒）</span>
+        </label>
+      </div>
+
+      <div class="bottom-actions">
+        <button class="btn-primary btn-large" id="btn-start">开始练习</button>
+        <button class="btn-secondary btn-large" id="btn-wrong-book">错题本</button>
+      </div>
+    </section>
+
+    <!-- ════════════════ 练习页 ════════════════ -->
+    <section id="view-practice" class="view">
+      <header class="practice-header">
+        <button class="back-btn" id="practice-back">←</button>
+        <div class="progress-info">
+          <span id="progress-text">第 1/20 题</span>
+          <span class="timer" id="timer-display" style="display:none;">60s</span>
+        </div>
+      </header>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="progress-fill" style="width:5%"></div>
+      </div>
+
+      <div class="question-card" id="question-card">
+        <div class="question-meta">
+          <span class="topic-tag" id="q-topic-tag">Ecology</span>
+          <span class="type-tag" id="q-type-tag">单选</span>
+        </div>
+        <div class="question-stem" id="q-stem"></div>
+        <div class="options-list" id="q-options"></div>
+        <div class="explanation-box" id="explanation-box" style="display:none;">
+          <div class="explanation-header" id="exp-header">
+            <span id="exp-icon"></span>
+            <span id="exp-title"></span>
+          </div>
+          <div class="explanation-correct" id="exp-correct"></div>
+          <div class="explanation-text" id="exp-text"></div>
+          <div class="explanation-source" id="exp-source"></div>
+        </div>
+      </div>
+
+      <div class="practice-actions">
+        <button class="btn-primary btn-large" id="btn-confirm" disabled>确认答案</button>
+        <button class="btn-primary btn-large hidden" id="btn-next">下一题</button>
+      </div>
+    </section>
+
+    <!-- ════════════════ 结果页 ════════════════ -->
+    <section id="view-result" class="view">
+      <header class="app-header">
+        <h1>练习结果</h1>
+      </header>
+
+      <div class="result-hero">
+        <div class="result-ring-container">
+          <svg class="result-ring" viewBox="0 0 200 200">
+            <circle class="ring-bg" cx="100" cy="100" r="85" fill="none" stroke-width="14"/>
+            <circle class="ring-fill" id="ring-fill" cx="100" cy="100" r="85" fill="none" stroke-width="14"
+                    stroke-dasharray="534" stroke-dashoffset="534"
+                    transform="rotate(-90 100 100)"/>
+          </svg>
+          <div class="result-center">
+            <span class="result-percent" id="result-percent">0%</span>
+            <span class="result-score" id="result-score">0/0</span>
+          </div>
+        </div>
+        <p class="result-comment" id="result-comment"></p>
+      </div>
+
+      <div class="result-summary">
+        <div class="summary-item">
+          <span class="summary-icon correct-icon">✓</span>
+          <span id="summary-correct">0 题正确</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-icon wrong-icon">✗</span>
+          <span id="summary-wrong">0 题错误</span>
+        </div>
+        <div class="summary-item" id="summary-time-wrap" style="display:none;">
+          <span class="summary-icon time-icon">⏱</span>
+          <span id="summary-time"></span>
+        </div>
+      </div>
+
+      <div class="section-title">
+        <h2>题目回顾</h2>
+      </div>
+      <div class="review-list" id="review-list"></div>
+
+      <div class="bottom-actions">
+        <button class="btn-primary btn-large" id="btn-retry-wrong">错题重练</button>
+        <button class="btn-secondary btn-large" id="btn-back-home">返回首页</button>
+      </div>
+    </section>
+
+    <!-- ════════════════ 错题本 ════════════════ -->
+    <section id="view-wrong" class="view">
+      <header class="app-header">
+        <h1>错题本</h1>
+        <button class="back-btn header-back" id="wrong-back">←</button>
+      </header>
+
+      <div class="wrong-filter-bar" id="wrong-filter-bar">
+        <button class="filter-chip active" data-filter="all">全部</button>
+      </div>
+
+      <div class="wrong-list" id="wrong-list"></div>
+
+      <div class="empty-state hidden" id="wrong-empty">
+        <div class="empty-icon">🎉</div>
+        <p>错题本为空，继续加油！</p>
+      </div>
+
+      <div class="bottom-actions" id="wrong-actions" style="display:none;">
+        <button class="btn-primary btn-large" id="btn-practice-wrong">全部错题重练</button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- 安装提示 -->
+  <div class="install-banner hidden" id="install-banner">
+    <div class="install-content">
+      <span>📱 添加到主屏幕，随时离线刷题</span>
+    </div>
+    <button class="btn-primary btn-small" id="btn-install">安装</button>
+    <button class="btn-text" id="btn-dismiss">✕</button>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

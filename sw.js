@@ -1,11 +1,13 @@
 // Service Worker — USABO PWA
 // 缓存核心资源，支持离线使用
 
-const CACHE_NAME = 'usabo-pwa-v1';
+const CACHE_NAME = 'usabo-pwa-v4';
 const CORE_ASSETS = [
   './',
   './index.html',
   './style.css',
+  './questions.enc.js',
+  './auth.js',
   './app.js',
   './manifest.json',
   './icon.svg',

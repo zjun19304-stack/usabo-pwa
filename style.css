@@ -477,8 +477,44 @@ body {
   font-size: 16px;
   line-height: 1.7;
   color: var(--c-text);
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   word-wrap: break-word;
+}
+
+/* ── 题目配图 ─────────────────────────────────── */
+.question-image-wrap {
+  margin-bottom: 14px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f0f8f7;
+  border: 1px solid #cde8e4;
+}
+.question-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+/* 结果页图片 */
+.review-img {
+  display: block;
+  max-width: 100%;
+  max-height: 260px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+/* 错题本图片 */
+.wrong-img {
+  display: block;
+  max-width: 100%;
+  max-height: 220px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: 1px solid #ddd;
 }
 
 .options-list {
@@ -1055,4 +1091,115 @@ body {
 ::selection {
   background: var(--c-accent);
   color: var(--c-primary-dark);
+}
+
+/* ════════════════════════════════════════════════════════
+   登录界面
+   ════════════════════════════════════════════════════════ */
+
+.login-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: linear-gradient(135deg, #0d7377 0%, #075055 50%, #0f3460 100%);
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-screen.active {
+  display: flex;
+}
+
+.login-card {
+  background: #fff;
+  border-radius: 24px;
+  padding: 48px 36px 36px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: loginFadeIn 0.5s ease;
+}
+
+@keyframes loginFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.login-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+
+.login-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0d7377;
+  margin-bottom: 6px;
+}
+
+.login-subtitle {
+  font-size: 0.9rem;
+  color: #5a7a85;
+  margin-bottom: 28px;
+}
+
+.login-input {
+  width: 100%;
+  padding: 14px 18px;
+  border: 2px solid #e2f0ee;
+  border-radius: 12px;
+  font-size: 1rem;
+  text-align: center;
+  letter-spacing: 2px;
+  transition: border-color 0.2s;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.login-input:focus {
+  border-color: #14a3a8;
+}
+
+.login-error {
+  color: #dc2626;
+  font-size: 0.82rem;
+  min-height: 20px;
+  margin: 10px 0 4px;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #0d7377, #14a3a8);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s;
+  margin-top: 8px;
+}
+
+.login-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(13, 115, 119, 0.35);
+}
+
+.login-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-hint {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin-top: 20px;
 }

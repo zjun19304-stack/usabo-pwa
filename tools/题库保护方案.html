@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>USABO 题库保护方案</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; color: #1a1a2e; line-height: 1.7; }
+  .hero { background: linear-gradient(135deg, #0f3460 0%, #0d7377 100%); color: #fff; padding: 48px 32px 40px; text-align: center; }
+  .hero h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+  .hero p { opacity: .85; font-size: 1.05rem; }
+  .container { max-width: 780px; margin: 0 auto; padding: 40px 24px 80px; }
+  h2 { font-size: 1.25rem; font-weight: 700; margin: 40px 0 16px; color: #0d7377; border-left: 4px solid #0d7377; padding-left: 12px; }
+  h3 { font-size: 1rem; font-weight: 700; margin: 24px 0 10px; }
+  p { margin-bottom: 12px; }
+  .step-box { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+  .code-block { background: #1e2a3a; color: #e2e8f0; border-radius: 8px; padding: 16px 20px; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: .88rem; margin: 14px 0; overflow-x: auto; line-height: 1.6; white-space: pre; }
+  .tip { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 14px 18px; margin: 16px 0; }
+  .tip strong { color: #92400e; }
+  .warn { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 14px 18px; margin: 16px 0; }
+  .warn strong { color: #b91c1c; }
+  .success { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 14px 18px; margin: 16px 0; }
+  .success strong { color: #15803d; }
+  .inline-code { background: #f1f5f9; color: #0d7377; border-radius: 4px; padding: 1px 6px; font-family: monospace; font-size: .88em; }
+  .flow-diagram { text-align: center; padding: 24px; background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border-radius: 12px; margin: 20px 0; font-size: 1.05rem; }
+  .flow-step { display: inline-block; background: #fff; border: 2px solid #0d7377; border-radius: 8px; padding: 8px 16px; margin: 4px; font-weight: 600; }
+  .flow-arrow { display: inline-block; color: #0d7377; font-weight: 700; margin: 0 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; margin: 16px 0; }
+  th { background: #0d7377; color: #fff; padding: 10px 14px; text-align: left; }
+  td { padding: 9px 14px; border-bottom: 1px solid #e2e8f0; }
+  tr:nth-child(even) td { background: #f8f9fa; }
+  .check { color: #16a34a; font-weight: 700; }
+  .cross { color: #dc2626; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>🔐 USABO 题库保护方案</h1>
+  <p>密码验证 + 题库加密 + 反复制</p>
+</div>
+
+<div class="container">
+
+  <!-- 方案概览 -->
+  <h2>保护效果</h2>
+  <div class="step-box">
+    <table>
+      <tr><th>风险场景</th><th>改造前</th><th>改造后</th></tr>
+      <tr><td>学生查看源码直接下载 questions.js</td><td class="cross">✗ 完全暴露</td><td class="check">✓ 看到的是加密乱码</td></tr>
+      <tr><td>学生 clone GitHub 仓库拿走题库</td><td class="cross">✗ 完全暴露</td><td class="check">✓ 仓库里没有 questions.js</td></tr>
+      <tr><td>学生把链接分享给其他人</td><td class="cross">✗ 任何人可用</td><td class="check">✓ 需要密码才能进入</td></tr>
+      <tr><td>学生右键复制题目文字</td><td class="cross">✗ 可以复制</td><td class="check">✓ 右键已禁用</td></tr>
+      <tr><td>学生打开开发者工具查看</td><td class="cross">✗ 完全可见</td><td class="check">✓ 页面模糊+快捷键禁用</td></tr>
+    </table>
+  </div>
+
+  <div class="warn">
+    <strong>⚠️ 诚实说明：</strong>前端加密无法做到 100% 防破解。本方案的目标是让普通学生无法轻易获取题库，大幅提高复制门槛。对于有专业技术的用户，任何前端方案都不是绝对安全的。
+  </div>
+
+  <!-- 工作流程 -->
+  <h2>工作流程</h2>
+  <div class="flow-diagram">
+    <span class="flow-step">📝 整理题目 (questions.js)</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-step">🔐 运行加密脚本</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-step">📦 生成 questions.enc.js</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-step">🚀 git push</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-step">👨‍🎓 学生输入密码使用</span>
+  </div>
+
+  <!-- 使用方法 -->
+  <h2>如何设置密码</h2>
+  <div class="step-box">
+    <h3>第一步：设置密码并加密题库</h3>
+    <p>打开终端，进入 <span class="inline-code">usabo-pwa/tools/</span> 目录：</p>
+    <div class="code-block">python encrypt_questions.py USABO2026</div>
+    <p>如果需要多个密码（比如不同班级用不同密码）：</p>
+    <div class="code-block">python encrypt_questions.py classA,classB,teacher2026</div>
+    <p>运行后会生成 <span class="inline-code">questions.enc.js</span>（加密后的题库）。</p>
+  </div>
+
+  <div class="step-box">
+    <h3>第二步：推送到 GitHub</h3>
+    <div class="code-block">cd usabo-pwa
+git add questions.enc.js auth.js index.html app.js style.css sw.js .gitignore
+git commit -m "Add password protection"
+git push</div>
+    <p>推送后 1~2 分钟，网站自动更新。</p>
+  </div>
+
+  <div class="step-box">
+    <h3>第三步：把密码告诉学生</h3>
+    <p>学生打开 <span class="inline-code">https://zjun19304-stack.github.io/usabo-pwa/</span> 后，会看到登录界面。</p>
+    <p>输入你设置的密码（如 <span class="inline-code">USABO2026</span>）即可进入刷题。</p>
+    <p>密码保存在 sessionStorage 中——关闭浏览器后需要重新输入。</p>
+  </div>
+
+  <!-- 修改密码 -->
+  <h2>如何修改密码</h2>
+  <div class="step-box">
+    <p>只需重新运行加密脚本，用新密码：</p>
+    <div class="code-block">cd usabo-pwa/tools
+python encrypt_questions.py MyNewPassword2026</div>
+    <p>然后推送更新：</p>
+    <div class="code-block">cd ..
+git add questions.enc.js
+git commit -m "Update password"
+git push</div>
+    <p>所有学生需要使用新密码才能登录。</p>
+  </div>
+
+  <!-- 添加新题目 -->
+  <h2>添加新题目后如何更新</h2>
+  <div class="step-box">
+    <p>当你用 <span class="inline-code">doc_to_questions.py</span> 添加了新题目到 questions.js 后，需要重新加密：</p>
+    <div class="code-block">cd usabo-pwa/tools
+python encrypt_questions.py USABO2026</div>
+    <p>然后推送：</p>
+    <div class="code-block">cd ..
+git add questions.enc.js
+git commit -m "Add new questions"
+git push</div>
+  </div>
+
+  <div class="tip">
+    <strong>💡 记住：</strong>每次修改 questions.js 后，都要重新运行加密脚本生成新的 questions.enc.js。questions.js 本身不会被上传到 GitHub（已在 .gitignore 中排除）。
+  </div>
+
+  <!-- 文件说明 -->
+  <h2>文件说明</h2>
+  <div class="step-box">
+    <table>
+      <tr><th>文件</th><th>是否上传 GitHub</th><th>作用</th></tr>
+      <tr><td>questions.js</td><td class="cross">✗ 不上传</td><td>原始题库（明文），只在你电脑上</td></tr>
+      <tr><td>questions.enc.js</td><td class="check">✓ 上传</td><td>加密后的题库，学生需要密码才能解锁</td></tr>
+      <tr><td>auth.js</td><td class="check">✓ 上传</td><td>登录验证 + 解密逻辑</td></tr>
+      <tr><td>app.js</td><td class="check">✓ 上传</td><td>答题逻辑（等认证通过后才启动）</td></tr>
+      <tr><td>tools/encrypt_questions.py</td><td class="check">✓ 上传</td><td>加密工具（学生拿了也没用，没有 questions.js）</td></tr>
+    </table>
+  </div>
+
+  <!-- 注意事项 -->
+  <h2>重要注意事项</h2>
+  <div class="warn">
+    <strong>1. Git 历史：</strong>如果之前已经把 questions.js 提交到 GitHub 过，即使现在 .gitignore 排除了它，历史记录里还有。需要执行：<br>
+    <span class="inline-code">git rm --cached questions.js</span> 然后提交。<br>
+    如果要彻底清除历史记录，需要用 <span class="inline-code">git filter-branch</span> 或 BFG Repo-Cleaner。
+  </div>
+
+  <div class="tip">
+    <strong>2. 密码安全：</strong>不要把密码写在任何会被上传的文件里。密码只在终端命令中输入，由你口头或私信告诉学生。
+  </div>
+
+  <div class="tip">
+    <strong>3. 离线使用：</strong>学生第一次输入密码后，加密题库会被 Service Worker 缓存。之后即使断网也能使用（但需要重新输入密码，因为 sessionStorage 在关闭浏览器后失效）。
+  </div>
+
+  <div class="success">
+    <strong>✅ 总结：你的完整工作流</strong><br><br>
+    1. 在 questions.js 中维护题目（明文，本地）<br>
+    2. 运行 <span class="inline-code">python encrypt_questions.py 密码</span> 生成加密版<br>
+    3. <span class="inline-code">git add . && git commit -m "update" && git push</span><br>
+    4. 学生用密码登录使用 🎉
+  </div>
+
+</div>
+</body>
+</html>

@@ -2,3 +2,7 @@
 Thumbs.db
 node_modules/
 *.log
+
+# 原始题库文件 — 不要上传到 GitHub！
+# 加密后的 questions.enc.js 才是公开的
+questions.js

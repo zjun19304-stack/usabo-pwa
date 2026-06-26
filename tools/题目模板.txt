@@ -1,0 +1,64 @@
+USABO 题目整理模板
+==========================================
+使用说明：
+1. 按照下面的格式逐题填写
+2. 每道题用 --- 分隔（三个短横线单独一行）
+3. 支持的板块：ECO / ANB / GEN / HER / RPH / GTE / BCC / APH / PLA / TAX / VIR / MIT
+4. 填好后把文件另存为 .docx 格式
+==========================================
+
+
+【板块】ECO
+【类型】single
+【难度】2
+【题干】Which of the following best describes the role of decomposers in an ecosystem?
+A. They convert solar energy into chemical energy
+B. They break down organic matter and return nutrients to the soil
+C. They occupy the highest trophic level in a food chain
+D. They compete with producers for available light
+【答案】B
+【解析】Decomposers (bacteria and fungi) break down dead organic matter, releasing nutrients back into the environment for producers to use.
+【来源】USABO Open Exam 2022
+---
+
+【板块】GEN
+【类型】multiple
+【难度】3
+【题干】Which of the following are true regarding DNA replication in eukaryotes? (Select all that apply)
+【图片】images/gen_replication.png
+A. Replication occurs in the 5' to 3' direction
+B. Okazaki fragments are formed on the leading strand
+C. Multiple origins of replication are used simultaneously
+D. DNA polymerase can initiate new strands without a primer
+【答案】A,C
+【解析】DNA is synthesized in the 5' to 3' direction (A correct). Okazaki fragments form on the lagging strand, not the leading strand (B wrong). Eukaryotes use multiple origins (C correct). DNA polymerase needs a primer (D wrong).
+【来源】USABO Invitational 2023
+---
+
+【板块】HER
+【类型】single
+【难度】2
+【题干】In a monohybrid cross between two heterozygous parents (Aa × Aa), what is the expected phenotypic ratio in the offspring?
+A. 1:1
+B. 1:2:1
+C. 3:1
+D. 2:1
+【答案】C
+【解析】The Punnett square gives genotypes AA:Aa:aa = 1:2:1, but phenotypically dominant (AA + Aa) to recessive (aa) = 3:1.
+【来源】USABO Open Exam 2021
+---
+
+（在此继续添加你的题目，格式同上）
+
+【板块】
+【类型】single
+【难度】2
+【题干】
+A. 
+B. 
+C. 
+D. 
+【答案】
+【解析】
+【来源】
+---

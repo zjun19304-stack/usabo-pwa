@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>USABO 题目导入指南</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; color: #1a1a2e; line-height: 1.7; }
+  .hero { background: linear-gradient(135deg, #0f3460 0%, #16213e 100%); color: #fff; padding: 48px 32px 40px; text-align: center; }
+  .hero h1 { font-size: 2rem; font-weight: 700; margin-bottom: 10px; }
+  .hero p { opacity: .8; font-size: 1.05rem; }
+  .container { max-width: 820px; margin: 0 auto; padding: 40px 24px 80px; }
+  h2 { font-size: 1.25rem; font-weight: 700; margin: 40px 0 16px; color: #0f3460; border-left: 4px solid #0f3460; padding-left: 12px; }
+  h3 { font-size: 1rem; font-weight: 700; margin: 24px 0 10px; color: #333; }
+  p { margin-bottom: 12px; }
+  .step-box { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+  .step-num { display: inline-block; background: #0f3460; color: #fff; border-radius: 50%; width: 28px; height: 28px; text-align: center; line-height: 28px; font-weight: 700; font-size: .85rem; margin-right: 10px; }
+  .step-title { font-size: 1.05rem; font-weight: 700; display: inline; }
+  .code-block { background: #1e2a3a; color: #e2e8f0; border-radius: 8px; padding: 16px 20px; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: .88rem; margin: 14px 0; overflow-x: auto; line-height: 1.6; }
+  .code-block .comment { color: #64a0c8; }
+  .code-block .tag { color: #79c0ff; }
+  .code-block .val { color: #a8d8a8; }
+  .code-block .opt { color: #ffc966; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th { background: #0f3460; color: #fff; padding: 10px 14px; text-align: left; }
+  td { padding: 9px 14px; border-bottom: 1px solid #e2e8f0; }
+  tr:nth-child(even) td { background: #f8f9fa; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: .78rem; font-weight: 600; }
+  .badge-req { background: #fee2e2; color: #b91c1c; }
+  .badge-opt { background: #e0f2fe; color: #0369a1; }
+  .tip { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 14px 18px; margin: 16px 0; }
+  .tip strong { color: #92400e; }
+  .warn { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 14px 18px; margin: 16px 0; }
+  .success { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 14px 18px; margin: 16px 0; }
+  .inline-code { background: #f1f5f9; color: #0f3460; border-radius: 4px; padding: 1px 6px; font-family: monospace; font-size: .88em; }
+  hr { border: none; border-top: 1px solid #e2e8f0; margin: 32px 0; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>📋 USABO 题目导入指南</h1>
+  <p>用 Word 整理题目 → Python 一键转换 → 自动更新题库</p>
+</div>
+
+<div class="container">
+
+  <!-- 工作流程概览 -->
+  <h2>工作流程概览</h2>
+  <div class="step-box" style="background: linear-gradient(135deg,#f0f9ff,#e0f2fe); border-color:#bae6fd;">
+    <p style="font-size:1.1rem; text-align:center; letter-spacing:.5px;">
+      📝 你整理 Word 文档 &nbsp;→&nbsp; 🐍 运行 Python 脚本 &nbsp;→&nbsp; ✅ questions.js 自动更新
+    </p>
+  </div>
+
+  <!-- 第一步 -->
+  <h2>第一步：安装脚本依赖</h2>
+  <div class="step-box">
+    <p>打开电脑的 <strong>命令提示符（CMD）或终端</strong>，运行：</p>
+    <div class="code-block">pip install python-docx</div>
+    <p>如果你的电脑有多个 Python，用完整路径：</p>
+    <div class="code-block">C:\Users\Admin\.workbuddy\binaries\python\versions\3.13.12\python.exe -m pip install python-docx</div>
+  </div>
+
+  <!-- 第二步：Word 模板格式 -->
+  <h2>第二步：按格式整理 Word 文档</h2>
+  <div class="step-box">
+    <p>新建一个 <strong>.docx</strong> 文件，按以下格式填写题目。每道题用 <span class="inline-code">---</span> 隔开。</p>
+
+    <div class="code-block">
+<span class="tag">【板块】</span><span class="val">ECO</span>
+<span class="tag">【类型】</span><span class="val">single</span>
+<span class="tag">【难度】</span><span class="val">2</span>
+<span class="tag">【题干】</span><span class="val">Which of the following best describes the role of decomposers?</span>
+<span class="opt">A. They convert solar energy into chemical energy</span>
+<span class="opt">B. They break down organic matter and return nutrients to the soil</span>
+<span class="opt">C. They occupy the highest trophic level</span>
+<span class="opt">D. They compete with producers for available light</span>
+<span class="tag">【答案】</span><span class="val">B</span>
+<span class="tag">【解析】</span><span class="val">Decomposers break down dead organic matter, releasing nutrients...</span>
+<span class="tag">【来源】</span><span class="val">USABO Open Exam 2022</span>
+<span class="comment">---</span>
+
+<span class="tag">【板块】</span><span class="val">GEN</span>
+<span class="tag">【类型】</span><span class="val">multiple</span>
+<span class="tag">【难度】</span><span class="val">3</span>
+<span class="tag">【题干】</span><span class="val">Which are true regarding DNA replication in eukaryotes?</span>
+<span class="tag">【图片】</span><span class="val">images/gen_replication.png</span>
+<span class="opt">A. Replication occurs in the 5' to 3' direction</span>
+<span class="opt">B. Okazaki fragments form on the leading strand</span>
+<span class="opt">C. Multiple origins of replication are used simultaneously</span>
+<span class="opt">D. DNA polymerase requires no primer</span>
+<span class="tag">【答案】</span><span class="val">A,C</span>
+<span class="tag">【解析】</span><span class="val">A and C are correct. B is wrong (Okazaki on lagging strand). D is wrong.</span>
+<span class="tag">【来源】</span><span class="val">USABO Invitational 2023</span>
+<span class="comment">---</span>
+    </div>
+  </div>
+
+  <!-- 字段说明表 -->
+  <h2>字段说明</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>字段</th><th>必填？</th><th>说明</th><th>示例值</th></tr>
+      <tr><td>【板块】</td><td><span class="badge badge-req">必填</span></td><td>12个板块之一（见下表）</td><td>ECO</td></tr>
+      <tr><td>【类型】</td><td><span class="badge badge-opt">可省略</span></td><td>single（单选）或 multiple（多选），默认 single</td><td>single</td></tr>
+      <tr><td>【难度】</td><td><span class="badge badge-opt">可省略</span></td><td>1=简单 2=中等 3=困难，默认 2</td><td>2</td></tr>
+      <tr><td>【题干】</td><td><span class="badge badge-req">必填</span></td><td>题目正文，可以跨多行</td><td>Which of the following...</td></tr>
+      <tr><td>A. B. C. D.</td><td><span class="badge badge-req">必填</span></td><td>选项，以字母+点或顿号开头</td><td>A. Option text</td></tr>
+      <tr><td>【图片】</td><td><span class="badge badge-opt">可省略</span></td><td>题目图片路径（相对于 index.html）</td><td>images/xxx.png</td></tr>
+      <tr><td>【答案】</td><td><span class="badge badge-req">必填</span></td><td>正确答案字母，多选用逗号隔开</td><td>B 或 A,C</td></tr>
+      <tr><td>【解析】</td><td><span class="badge badge-opt">可省略</span></td><td>解题思路，学生答完后可见</td><td>Because...</td></tr>
+      <tr><td>【来源】</td><td><span class="badge badge-opt">可省略</span></td><td>题目来源标注</td><td>USABO Open 2022</td></tr>
+    </table>
+  </div>
+
+  <!-- 板块缩写表 -->
+  <h2>12 个板块缩写</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>缩写</th><th>英文全称</th><th>中文</th></tr>
+      <tr><td>ECO</td><td>Ecology</td><td>生态学</td></tr>
+      <tr><td>ANB</td><td>Animal Behavior</td><td>动物行为</td></tr>
+      <tr><td>GEN</td><td>Gene</td><td>基因（分子层面）</td></tr>
+      <tr><td>HER</td><td>Heredity</td><td>遗传学</td></tr>
+      <tr><td>RPH</td><td>Respiration and Photosynthesis</td><td>呼吸与光合作用</td></tr>
+      <tr><td>GTE</td><td>Genetic Technology</td><td>基因技术</td></tr>
+      <tr><td>BCC</td><td>Biochemistry and Cell Communication</td><td>生物化学与细胞通讯</td></tr>
+      <tr><td>APH</td><td>Animal Physiology</td><td>动物生理学</td></tr>
+      <tr><td>PLA</td><td>Plant Anatomy</td><td>植物解剖学</td></tr>
+      <tr><td>TAX</td><td>Taxonomy</td><td>分类学</td></tr>
+      <tr><td>VIR</td><td>Virus</td><td>病毒</td></tr>
+      <tr><td>MIT</td><td>Mitosis and Meiosis</td><td>有丝分裂与减数分裂</td></tr>
+    </table>
+  </div>
+
+  <!-- 第三步：运行转换脚本 -->
+  <h2>第三步：运行转换脚本</h2>
+  <div class="step-box">
+    <p>打开终端，进入 <span class="inline-code">usabo-pwa/tools/</span> 目录，然后运行：</p>
+
+    <h3>🔄 追加新题目（最常用）</h3>
+    <p>把新题目合并到现有题库，不影响已有题目：</p>
+    <div class="code-block">python doc_to_questions.py  你的文件.docx  --append</div>
+
+    <h3>🔁 全量替换题库</h3>
+    <p>用 Word 文档里的题目完整替换 questions.js 的所有题目：</p>
+    <div class="code-block">python doc_to_questions.py  你的文件.docx</div>
+
+    <h3>👁️ 仅预览不写入（安全检查）</h3>
+    <div class="code-block">python doc_to_questions.py  你的文件.docx  --dry-run</div>
+
+    <h3>📁 指定输出路径</h3>
+    <div class="code-block">python doc_to_questions.py  你的文件.docx  --out C:\path\to\questions.js  --append</div>
+  </div>
+
+  <div class="tip">
+    <strong>💡 提示：</strong>脚本会自动跳过格式有问题的题目，并在终端里提示哪些题有问题，方便你回去 Word 里修改。
+  </div>
+
+  <!-- 第四步：发布 -->
+  <h2>第四步：把更新推送到 GitHub Pages</h2>
+  <div class="step-box">
+    <p>在 <span class="inline-code">usabo-pwa/</span> 根目录下运行：</p>
+    <div class="code-block">
+git add questions.js
+git commit -m "Add new questions"
+git push
+    </div>
+    <p>推送后约 1~2 分钟，<strong>https://zjun19304-stack.github.io/usabo-pwa/</strong> 自动更新。</p>
+  </div>
+
+  <!-- 常见问题 -->
+  <h2>常见问题</h2>
+  <div class="step-box">
+    <h3>❓ 题干太长怎么办？</h3>
+    <p>【题干】行后面可以直接换行续写，脚本会自动合并，直到遇到选项行（A. B. ...）为止。</p>
+
+    <h3>❓ 有图片怎么处理？</h3>
+    <p>先把图片放到 <span class="inline-code">usabo-pwa/images/</span> 目录，然后在 Word 里写 <span class="inline-code">【图片】images/文件名.png</span> 即可。</p>
+
+    <h3>❓ 如何处理 5 个选项（A-E）？</h3>
+    <p>直接写 E. 就行，脚本支持 A～F 最多 6 个选项。</p>
+
+    <h3>❓ 脚本报错"找不到输入文件"？</h3>
+    <p>确认你的 Word 文件路径正确，或者把 .docx 文件复制到 <span class="inline-code">tools/</span> 目录再运行。</p>
+  </div>
+
+  <div class="success">
+    <strong>✅ 你的工作流：</strong><br>
+    整理 Word → 运行一条命令 → git push → 题库自动更新 🎉
+  </div>
+
+</div>
+</body>
+</html>

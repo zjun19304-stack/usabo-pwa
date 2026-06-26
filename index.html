@@ -15,7 +15,21 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="app">
+
+  <!-- ════════════════ 登录界面 ════════════════ -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <div class="login-icon">🧬</div>
+      <h1 class="login-title">USABO 专题训练</h1>
+      <p class="login-subtitle">请输入访问密码</p>
+      <input type="password" id="login-password" class="login-input" placeholder="输入密码" autocomplete="off" spellcheck="false">
+      <p class="login-error" id="login-error"></p>
+      <button class="login-btn" id="login-btn">进入</button>
+      <p class="login-hint">密码由老师提供，如有疑问请联系老师</p>
+    </div>
+  </div>
+
+  <div id="app" style="display:none;">
 
     <!-- ════════════════ 首页 ════════════════ -->
     <section id="view-home" class="view active">
@@ -92,6 +106,9 @@
           <span class="type-tag" id="q-type-tag">单选</span>
         </div>
         <div class="question-stem" id="q-stem"></div>
+        <div class="question-image-wrap hidden" id="q-image-wrap">
+          <img class="question-image" id="q-image" src="" alt="">
+        </div>
         <div class="options-list" id="q-options"></div>
         <div class="explanation-box" id="explanation-box" style="display:none;">
           <div class="explanation-header" id="exp-header">
@@ -192,6 +209,8 @@
     <button class="btn-text" id="btn-dismiss">✕</button>
   </div>
 
+  <script src="questions.enc.js"></script>
+  <script src="auth.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

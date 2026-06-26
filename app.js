@@ -888,4 +888,14 @@ const PWA = {
 window.addEventListener('auth:ready', () => {
   PWA.init();
   Router.init();
+
+  // 退出登录按钮
+  const logoutBtn = document.getElementById('btn-logout');
+  if (logoutBtn) {
+    logoutBtn.onclick = () => {
+      if (confirm('确定退出登录？')) {
+        Auth.logout();
+      }
+    };
+  }
 });

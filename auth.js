@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════════
    USABO PWA — Auth Module
-   登录验证 + 题库解密
+   登录验证 + 题库解密 + 多学生支持
    ════════════════════════════════════════════════════════ */
 
 'use strict';
@@ -9,15 +9,14 @@ const Auth = {
   SESSION_KEY: 'usabo_auth_session',
   MAX_ATTEMPTS: 5,
   LOCK_TIME: 30000, // 30秒锁定
+  currentStudent: '',
 
   /**
    * 初始化：检查是否已登录，未登录则显示登录界面
    */
   init() {
-    // 检查是否已有会话
     const session = this.getSession();
     if (session) {
-      // 已有会话，尝试解密
       this.tryDecrypt(session.password).then(success => {
         if (success) {
           this.unlockApp();
@@ -52,9 +51,6 @@ const Auth = {
     }
   },
 
-  /**
-   * 隐藏登录界面
-   */
   hideLogin() {
     const loginScreen = document.getElementById('login-screen');
     if (loginScreen) loginScreen.classList.remove('active');
@@ -84,23 +80,19 @@ const Auth = {
       return;
     }
 
-    // 按钮状态
     if (btn) {
       btn.disabled = true;
       btn.textContent = '验证中...';
     }
 
-    // 尝试解密
     const success = await this.tryDecrypt(password);
 
     if (success) {
-      // 保存会话（sessionStorage：关闭浏览器后失效）
       this.saveSession(password);
       this.hideLogin();
       this.unlockApp();
       this.setupAntiCopy();
     } else {
-      // 失败计数
       const attempts = parseInt(sessionStorage.getItem('usabo_attempts') || '0') + 1;
       sessionStorage.setItem('usabo_attempts', attempts.toString());
 
@@ -140,6 +132,8 @@ const Auth = {
           if (data.topics && data.questions) {
             window.TOPICS = data.topics;
             window.QUESTIONS = data.questions;
+            // 提取学生姓名
+            this.currentStudent = data.student || '同学';
             return true;
           }
         }
@@ -154,17 +148,12 @@ const Auth = {
    * 解密数据（与 Python 端 encrypt_data 对应）
    */
   async decryptData(encryptedB64, password) {
-    // SHA-256(password) -> key
     const keyData = new TextEncoder().encode(password);
     const keyHash = new Uint8Array(await crypto.subtle.digest('SHA-256', keyData));
 
-    // Base64 -> bytes
     const encrypted = Uint8Array.from(atob(encryptedB64), c => c.charCodeAt(0));
-
-    // 生成密钥流（SHA-256 计数器模式，与 Python 端一致）
     const keystream = await this.generateKeystream(keyHash, encrypted.length);
 
-    // XOR 解密
     const decrypted = new Uint8Array(encrypted.length);
     for (let i = 0; i < encrypted.length; i++) {
       decrypted[i] = encrypted[i] ^ keystream[i];
@@ -182,9 +171,8 @@ const Auth = {
     let counter = 0;
 
     while (offset < length) {
-      // SHA-256(key || counter_bytes)
       const counterBuf = new Uint8Array(4);
-      new DataView(counterBuf.buffer).setUint32(0, counter, false); // big-endian
+      new DataView(counterBuf.buffer).setUint32(0, counter, false);
 
       const input = new Uint8Array(keyBytes.length + 4);
       input.set(keyBytes);
@@ -208,8 +196,31 @@ const Auth = {
     const app = document.getElementById('app');
     if (app) app.style.display = '';
 
+    // 显示学生姓名
+    this.updateStudentDisplay();
+
     // 触发 app.js 初始化
     window.dispatchEvent(new CustomEvent('auth:ready'));
+  },
+
+  /**
+   * 更新界面上的学生姓名显示
+   */
+  updateStudentDisplay() {
+    // 首页标题区域显示欢迎语
+    const subtitle = document.querySelector('.app-header .subtitle');
+    if (subtitle) {
+      subtitle.textContent = `${this.currentStudent} · 课后自主刷题`;
+    }
+
+    // 更新页面标题
+    document.title = `USABO 专题训练 · ${this.currentStudent}`;
+
+    // 如果有学生信息条，更新它
+    const studentBar = document.getElementById('student-bar');
+    if (studentBar) {
+      studentBar.textContent = this.currentStudent;
+    }
   },
 
   /**
@@ -225,6 +236,7 @@ const Auth = {
   saveSession(password) {
     sessionStorage.setItem(this.SESSION_KEY, JSON.stringify({
       password: password,
+      student: this.currentStudent,
       time: Date.now(),
     }));
   },
@@ -252,18 +264,16 @@ const Auth = {
       e.preventDefault();
     });
 
-    // 禁用文字选择（题干和选项区域）
+    // 禁用文字选择
     document.addEventListener('selectstart', (e) => {
       const tag = e.target.tagName.toLowerCase();
       if (['input', 'textarea'].includes(tag)) return;
       e.preventDefault();
     });
 
-    // 禁用常见开发者工具快捷键
+    // 禁用开发者工具快捷键
     document.addEventListener('keydown', (e) => {
-      // F12
       if (e.key === 'F12') { e.preventDefault(); return; }
-      // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+U
       if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'i' || e.key === 'j')) {
         e.preventDefault(); return;
       }
@@ -272,7 +282,7 @@ const Auth = {
       }
     });
 
-    // 检测开发者工具打开（通过窗口尺寸变化）
+    // 检测开发者工具
     let devtoolsOpen = false;
     const threshold = 160;
     setInterval(() => {
@@ -281,7 +291,6 @@ const Auth = {
       if (widthDiff > threshold || heightDiff > threshold) {
         if (!devtoolsOpen) {
           devtoolsOpen = true;
-          // 清空页面内容
           document.body.style.filter = 'blur(10px)';
         }
       } else {

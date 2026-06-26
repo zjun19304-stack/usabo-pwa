@@ -99,6 +99,40 @@ body {
   margin-top: 4px;
 }
 
+/* ── 头部布局（标题 + 退出按钮） ── */
+.header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.header-row > div:first-child {
+  flex: 1;
+  text-align: center;
+}
+
+.logout-btn {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 20px;
+  background: var(--c-bg-card);
+  color: var(--c-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.logout-btn:active {
+  transform: scale(0.95);
+  background: var(--c-wrong-bg);
+  color: var(--c-wrong);
+  border-color: var(--c-wrong);
+}
+
 /* ── 统计栏 ── */
 .stats-bar {
   display: flex;

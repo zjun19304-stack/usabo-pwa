@@ -13,6 +13,32 @@
 //  2. 工具函数
 // ════════════════════════════════════════════════════════
 
+/**
+ * Escape HTML special characters to prevent XSS.
+ * Use this whenever inserting dynamic content into innerHTML.
+ */
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * Validate that a URL is safe for use in img src.
+ * Blocks javascript:, data: (except image/), and other dangerous schemes.
+ */
+function safeUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  const trimmed = url.trim().toLowerCase();
+  if (trimmed.startsWith('javascript:') || trimmed.startsWith('vbscript:')) return '';
+  if (trimmed.startsWith('data:') && !trimmed.startsWith('data:image/')) return '';
+  return url;
+}
+
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -190,9 +216,9 @@ const HomeView = {
       card.className = 'topic-card' + (isSelected ? ' selected' : '');
       card.dataset.topic = topic.key;
       card.innerHTML = `
-        <div class="topic-en">${topic.en}</div>
-        <div class="topic-zh">${topic.zh}</div>
-        <div class="topic-count">${count} 题</div>
+        <div class="topic-en">${escapeHtml(topic.en)}</div>
+        <div class="topic-zh">${escapeHtml(topic.zh)}</div>
+        <div class="topic-count">${escapeHtml(count)} 题</div>
       `;
       card.addEventListener('click', () => this.toggleTopic(topic.key));
       grid.appendChild(card);
@@ -346,7 +372,8 @@ const PracticeView = {
     const imgWrap = document.getElementById('q-image-wrap');
     const imgEl = document.getElementById('q-image');
     if (q.image) {
-      imgEl.src = q.image;
+      const safe = safeUrl(q.image);
+      imgEl.src = safe;
       imgEl.alt = q.stem;
       imgWrap.style.display = 'block';
     } else {
@@ -362,8 +389,8 @@ const PracticeView = {
       item.className = 'option-item';
       item.dataset.key = opt.key;
       item.innerHTML = `
-        <div class="option-key">${opt.key}</div>
-        <div class="option-text">${opt.text}</div>
+        <div class="option-key">${escapeHtml(opt.key)}</div>
+        <div class="option-text">${escapeHtml(opt.text)}</div>
         <div class="option-icon"></div>
       `;
       item.addEventListener('click', () => this.selectOption(opt.key));
@@ -639,15 +666,15 @@ const ResultView = {
       item.innerHTML = `
         <div class="review-header">
           <span class="review-status ${a.correct ? 'correct' : 'wrong'}">${a.correct ? '✓' : '✗'}</span>
-          <span class="review-topic">${topic.en}</span>
+          <span class="review-topic">${escapeHtml(topic.en)}</span>
         </div>
-        <div class="review-stem">${i + 1}. ${a.stem}</div>
-        ${a.image ? `<img class="review-img" src="${a.image}" alt="${a.stem}" loading="lazy">` : ''}
+        <div class="review-stem">${escapeHtml(i + 1)}. ${escapeHtml(a.stem)}</div>
+        ${a.image ? `<img class="review-img" src="${escapeHtml(a.image)}" alt="${escapeHtml(a.stem)}" loading="lazy">` : ''}
         <div class="review-answers">
-          <span class="your-answer ${a.correct ? '' : 'wrong'}">你的答案：${a.selected.join('、') || '未作答'}</span>
-          <span class="right-answer">正确答案：${a.answer.join('、')}</span>
+          <span class="your-answer ${a.correct ? '' : 'wrong'}">你的答案：${escapeHtml(a.selected.join('、')) || '未作答'}</span>
+          <span class="right-answer">正确答案：${escapeHtml(a.answer.join('、'))}</span>
         </div>
-        <div class="review-explain">${a.explain}</div>
+        <div class="review-explain">${escapeHtml(a.explain)}</div>
         <button class="review-toggle">查看解析</button>
       `;
       item.querySelector('.review-toggle').onclick = () => {
@@ -746,20 +773,20 @@ const WrongView = {
       card.innerHTML = `
         <div class="wrong-card-header">
           <div class="wrong-card-tags">
-            <span class="topic-tag">${topic.en}</span>
+            <span class="topic-tag">${escapeHtml(topic.en)}</span>
             <span class="type-tag ${w.type === 'multiple' ? '' : 'single'}">${w.type === 'multiple' ? '多选' : '单选'}</span>
           </div>
-          <span class="wrong-card-meta">${new Date(w.addedAt).toLocaleDateString('zh-CN')}</span>
+          <span class="wrong-card-meta">${escapeHtml(new Date(w.addedAt).toLocaleDateString('zh-CN'))}</span>
         </div>
-        <div class="wrong-stem">${i + 1}. ${w.stem}</div>
-        ${w.image ? `<img class="wrong-img" src="${w.image}" alt="${w.stem}" loading="lazy">` : ''}
+        <div class="wrong-stem">${escapeHtml(i + 1)}. ${escapeHtml(w.stem)}</div>
+        ${w.image ? `<img class="wrong-img" src="${escapeHtml(w.image)}" alt="${escapeHtml(w.stem)}" loading="lazy">` : ''}
         <div class="wrong-answers">
-          <span class="your-answer">你的答案：${(w.yourAnswer || []).join('、') || '未作答'}</span>
-          <span class="right-answer">正确答案：${w.answer.join('、')}</span>
+          <span class="your-answer">你的答案：${escapeHtml((w.yourAnswer || []).join('、')) || '未作答'}</span>
+          <span class="right-answer">正确答案：${escapeHtml(w.answer.join('、'))}</span>
         </div>
-        <div class="wrong-explain">${w.explain}</div>
+        <div class="wrong-explain">${escapeHtml(w.explain)}</div>
         <div class="wrong-card-actions">
-          <button class="btn-mini danger" data-action="remove" data-id="${w.id}">已掌握，移除</button>
+          <button class="btn-mini danger" data-action="remove" data-id="${escapeHtml(w.id)}">已掌握，移除</button>
         </div>
       `;
 

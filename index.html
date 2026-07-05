@@ -8,6 +8,21 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="USABO">
+
+  <!-- ════════ Security Headers (via meta — GitHub Pages has no server-side headers) ════════ -->
+  <!-- Content Security Policy: restrict all resource loading to same-origin -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none';">
+  <!-- Referrer Policy: strip referrer on cross-origin navigations -->
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <!-- Prevent MIME-type sniffing -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <!-- X-DNS-Prefetch-Control: disable prefetch to reduce info leakage -->
+  <meta http-equiv="X-DNS-Prefetch-Control" content="off">
+  <!-- Permissions Policy: lock down browser APIs not needed by this app -->
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), interest-cohort=()">
+  <!-- Disable IE legacy compatibility mode -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">

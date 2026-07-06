@@ -1037,7 +1037,7 @@ function init() {
   };
 
   // Export wrong questions PDF
-  document.getElementById('btn-export-wrong-pdf').onclick = () => {
+  document.getElementById('btn-export-wrong-pdf').onclick = async () => {
     const container = document.getElementById('wrong-export');
     const students = AdminStore.getAll();
     if (students.length === 0) {

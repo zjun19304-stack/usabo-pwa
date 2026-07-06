@@ -897,11 +897,9 @@ async function embedImages(container) {
       });
       img.src = base64;
     } catch (e) {
-      // 图片加载失败，替换为占位文字，避免 PDF 出现裂图图标
-      const alt = document.createElement('div');
-      alt.className = 'img-missing';
-      alt.textContent = `[图片加载失败: ${src}]`;
-      if (img.parentNode) img.parentNode.replaceChild(alt, img);
+      // fetch 失败（如 file:// 协议或网络问题），保留原 <img> 标签，
+      // 让浏览器自行加载；waitForImages 会等待加载完成
+      console.warn('embedImages: 跳过', src, e.message);
     }
   }));
 }

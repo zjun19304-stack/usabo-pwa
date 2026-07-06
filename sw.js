@@ -1,7 +1,7 @@
 // Service Worker — USABO PWA (Hardened)
 // Cache-first with network fallback, cache-busting on version change
 
-const CACHE_NAME = 'usabo-pwa-v8';
+const CACHE_NAME = 'usabo-pwa-v9';
 const CORE_ASSETS = [
   './',
   './index.html',

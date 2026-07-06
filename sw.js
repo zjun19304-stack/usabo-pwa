@@ -1,7 +1,7 @@
 // Service Worker — USABO PWA (Hardened)
 // Cache-first with network fallback, cache-busting on version change
 
-const CACHE_NAME = 'usabo-pwa-v19';
+const CACHE_NAME = 'usabo-pwa-v20';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -56,7 +56,7 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== location.origin) return;
 
   // For navigation requests, try network first (to get latest HTML with CSP),
-  // then fall back to cache, then offline page
+  // then fall back to cache for the requested page, then index.html as last resort
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
@@ -71,7 +71,9 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          return caches.match('./index.html');
+          return caches.match(event.request).then((cached) => {
+            return cached || caches.match('./index.html');
+          });
         })
     );
     return;

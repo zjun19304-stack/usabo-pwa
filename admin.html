@@ -102,8 +102,12 @@
       background: linear-gradient(135deg, #8b5cf6, #7c3aed);
       color: #fff;
     }
+    .btn-practice-pdf {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff;
+    }
 
-    /* ── Wrong Questions Print Export ── */
+    /* ── Wrong Questions Print Export (Full: with answers) ── */
     #wrong-export {
       display: none;
       background: #fff;
@@ -174,15 +178,90 @@
     .we-cover h2 { font-size: 26px; margin-bottom: 8px; }
     .we-cover p { color: #666; font-size: 13px; }
 
+    /* ── Practice Export (Stems + Options only, no answers) ── */
+    #practice-export {
+      display: none;
+      background: #fff;
+      color: #000;
+      padding: 40px;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    #practice-export.active {
+      display: block;
+    }
+    .pe-cover {
+      text-align: center; padding: 60px 20px;
+      border-bottom: 2px solid #333; margin-bottom: 30px;
+    }
+    .pe-cover h2 { font-size: 26px; margin-bottom: 8px; }
+    .pe-cover p { color: #666; font-size: 13px; }
+    .pe-student-title {
+      font-size: 20px; font-weight: 700;
+      border-bottom: 2px solid #333;
+      padding-bottom: 8px; margin: 24px 0 16px;
+    }
+    .pe-student-title:first-child { margin-top: 0; }
+    .pe-question {
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 1px dashed #ccc;
+      page-break-inside: avoid;
+    }
+    .pe-q-num {
+      font-weight: 700; font-size: 15px; margin-bottom: 6px;
+      color: #333;
+    }
+    .pe-stem {
+      font-weight: 600; margin-bottom: 10px;
+      font-size: 14px;
+    }
+    .pe-options {
+      margin: 0 0 10px 24px;
+    }
+    .pe-option {
+      margin: 4px 0;
+      padding: 4px 0;
+      font-size: 14px;
+    }
+    .pe-blank-line {
+      margin: 12px 0;
+      color: #999;
+      font-size: 12px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 30px;
+    }
+    .pe-q-image {
+      max-width: 100%;
+      max-height: 200px;
+      margin: 8px 0;
+    }
+    .pe-empty {
+      text-align: center; color: #999; padding: 40px;
+    }
+
     @media print {
       #login-overlay, #app, #detail-overlay, header, .btn { display: none !important; }
-      #wrong-export {
+      body { background: #fff; color: #000; }
+
+      /* Full wrong export (with answers) */
+      .printing-wrong #wrong-export {
         display: block !important;
         position: static;
       }
-      body { background: #fff; color: #000; }
+      .printing-wrong #practice-export { display: none !important; }
+
+      /* Practice export (stems + options only) */
+      .printing-practice #practice-export {
+        display: block !important;
+        position: static;
+      }
+      .printing-practice #wrong-export { display: none !important; }
+
       .we-question { page-break-inside: avoid; }
       .we-student-title { page-break-after: avoid; }
+      .pe-question { page-break-inside: avoid; }
+      .pe-student-title { page-break-after: avoid; }
     }
 
     /* ── Import Zone ── */
@@ -429,7 +508,8 @@
     <h1>📊 学生做题记录总览</h1>
     <div class="header-actions">
       <button class="btn btn-ghost" id="btn-clear-data">清空已导入数据</button>
-      <button class="btn btn-wrong-pdf" id="btn-export-wrong-pdf">📝 导出错题PDF</button>
+      <button class="btn btn-practice-pdf" id="btn-export-practice-pdf">✏️ 导出错题练习PDF</button>
+      <button class="btn btn-wrong-pdf" id="btn-export-wrong-pdf">📝 导出错题PDF（含答案）</button>
       <button class="btn btn-pdf" id="btn-export-pdf">📄 导出统计PDF</button>
     </div>
   </header>
@@ -967,12 +1047,101 @@ function init() {
     container.innerHTML = html;
     container.classList.add('active');
 
-    // Print, then restore after print dialog
+    document.body.classList.add('printing-wrong');
     const originalTitle = document.title;
     document.title = `USABO 错题汇总 - ${new Date().toLocaleDateString('zh-CN')}`;
     window.print();
     document.title = originalTitle;
     container.classList.remove('active');
+    document.body.classList.remove('printing-wrong');
+  };
+
+  // Export practice PDF (stems + options only, NO answers/explanations)
+  document.getElementById('btn-export-practice-pdf').onclick = () => {
+    const container = document.getElementById('practice-export');
+    const students = AdminStore.getAll();
+    if (students.length === 0) {
+      alert('请先导入学生数据');
+      return;
+    }
+
+    // De-duplicate wrong questions across students (same question might appear for multiple students)
+    const seenIds = new Set();
+    const allWrongs = [];
+    students.forEach(s => {
+      (s.wrongAnswers || []).forEach(w => {
+        const qId = w.id || w.stem;
+        if (!seenIds.has(qId)) {
+          seenIds.add(qId);
+          allWrongs.push(w);
+        }
+      });
+    });
+
+    if (allWrongs.length === 0) {
+      alert('所有学生暂无错题，无法导出');
+      return;
+    }
+
+    let html = '';
+    html += `<div class="pe-cover">
+      <h2>USABO 错题练习卷</h2>
+      <p>以下为所有学生的错题汇总 · 仅题干和选项 · 不含答案</p>
+      <p>共 ${allWrongs.length} 道题目 · 生成时间：${new Date().toLocaleString('zh-CN')}</p>
+      <p style="color:#999;font-size:11px;margin-top:12px;">⚠️ 请独立作答，完成后对照原错题记录核对答案</p>
+    </div>`;
+
+    // Group by student for per-student view, but also show combined
+    // First show the combined list (deduplicated)
+    html += `<div class="pe-student-title">全部错题（${allWrongs.length} 道）</div>`;
+    allWrongs.forEach((w, idx) => {
+      const optionsHtml = (w.options || []).map(opt =>
+        `<div class="pe-option">${opt.key}. ${escapeHTML(opt.text || '')}</div>`
+      ).join('');
+      const imgHtml = w.image ? `<img class="pe-q-image" src="${escapeHTML(w.image)}" alt="题目图片">` : '';
+      html += `
+        <div class="pe-question">
+          <div class="pe-q-num">${idx + 1}. [${escapeHTML(w.id || '?')}] ${escapeHTML(w.topic || '-')}</div>
+          <div class="pe-stem">${escapeHTML(w.stem || '无题目文本')}</div>
+          ${imgHtml}
+          <div class="pe-options">${optionsHtml}</div>
+          <div class="pe-blank-line">你的答案：</div>
+        </div>
+      `;
+    });
+
+    // Then per-student sections
+    students.forEach(s => {
+      const wrongs = s.wrongAnswers || [];
+      if (wrongs.length === 0) return;
+      html += `<div class="pe-student-title">学生：${escapeHTML(s.student)}（${wrongs.length} 道错题）</div>`;
+      wrongs.forEach((w, idx) => {
+        const optionsHtml = (w.options || []).map(opt =>
+          `<div class="pe-option">${opt.key}. ${escapeHTML(opt.text || '')}</div>`
+        ).join('');
+        const imgHtml = w.image ? `<img class="pe-q-image" src="${escapeHTML(w.image)}" alt="题目图片">` : '';
+        html += `
+          <div class="pe-question">
+            <div class="pe-q-num">${idx + 1}. [${escapeHTML(w.id || '?')}] ${escapeHTML(w.topic || '-')}</div>
+            <div class="pe-stem">${escapeHTML(w.stem || '无题目文本')}</div>
+            ${imgHtml}
+            <div class="pe-options">${optionsHtml}</div>
+            <div class="pe-blank-line">你的答案：</div>
+          </div>
+        `;
+      });
+    });
+
+    container.innerHTML = html;
+    container.classList.add('active');
+
+    document.body.classList.add('printing-practice');
+    const originalTitle = document.title;
+    document.title = `USABO 错题练习卷 - ${new Date().toLocaleDateString('zh-CN')}`;
+    window.print();
+    document.title = originalTitle;
+    container.classList.remove('active');
+    document.body.classList.remove('printing-practice');
   };
 
   function formatAnswer(ans) {
@@ -1022,6 +1191,9 @@ document.addEventListener('DOMContentLoaded', init);
 
 <!-- ── Wrong Questions Export View (Print/PDF) ── -->
 <div id="wrong-export"></div>
+
+<!-- ── Practice Export View (Stems + Options only, no answers) ── -->
+<div id="practice-export"></div>
 
 </body>
 </html>

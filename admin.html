@@ -842,6 +842,34 @@ function escapeHTML(str) {
   return d.innerHTML;
 }
 
+// 将题干中的图片路径（如 images/image99.png）自动渲染为 <img> 标签
+function renderStem(stem, imgClass = 'we-q-image') {
+  if (!stem) return '无题目文本';
+  let html = escapeHTML(stem);
+  // 将行内图片路径文本转为 img 标签（兼容旧数据）
+  html = html.replace(/images\/image(\d+)\.png/g, function(match, num) {
+    return `<img class="${imgClass}" src="images/image${num}.png" alt="题目图片">`;
+  });
+  // 保留换行
+  html = html.replace(/\n/g, '<br>');
+  return html;
+}
+
+// 等待容器内所有图片加载完成
+function waitForImages(container) {
+  const imgs = container.querySelectorAll('img');
+  const promises = Array.from(imgs).map(img => {
+    if (img.complete && img.naturalHeight !== 0) return Promise.resolve();
+    return new Promise((resolve) => {
+      img.onload = resolve;
+      img.onerror = resolve;
+      // 5秒超时，防止某张图片加载失败导致无法打印
+      setTimeout(resolve, 5000);
+    });
+  });
+  return Promise.all(promises);
+}
+
 // ── Student Detail Modal ──
 function showDetail(name) {
   const s = AdminStore.get(name);
@@ -1034,7 +1062,7 @@ function init() {
         html += `
           <div class="we-question">
             <div class="we-q-meta">${idx + 1}. [${escapeHTML(w.id || '?')}] 板块：${escapeHTML(w.topic || '-')}</div>
-            <div class="we-stem">${escapeHTML(w.stem || '无题目文本')}</div>
+            <div class="we-stem">${renderStem(w.stem)}</div>
             ${imgHtml}
             <div class="we-options">${optionsHtml}</div>
             <div class="we-answer-row">
@@ -1053,14 +1081,18 @@ function init() {
     document.body.classList.add('printing-wrong');
     const originalTitle = document.title;
     document.title = `USABO 错题汇总 - ${new Date().toLocaleDateString('zh-CN')}`;
+
+    // 等待图片加载完成后再打印，避免PDF中图片缺失
+    await waitForImages(container);
     window.print();
+
     document.title = originalTitle;
     container.classList.remove('active');
     document.body.classList.remove('printing-wrong');
   };
 
   // Export practice PDF (stems + options only, NO answers/explanations)
-  document.getElementById('btn-export-practice-pdf').onclick = () => {
+  document.getElementById('btn-export-practice-pdf').onclick = async () => {
     const container = document.getElementById('practice-export');
     const students = AdminStore.getAll();
     if (students.length === 0) {
@@ -1105,7 +1137,7 @@ function init() {
       html += `
         <div class="pe-question">
           <div class="pe-q-num">${idx + 1}. [${escapeHTML(w.id || '?')}] ${escapeHTML(w.topic || '-')}</div>
-          <div class="pe-stem">${escapeHTML(w.stem || '无题目文本')}</div>
+          <div class="pe-stem">${renderStem(w.stem, 'pe-q-image')}</div>
           ${imgHtml}
           <div class="pe-options">${optionsHtml}</div>
           <div class="pe-blank-line">你的答案：</div>
@@ -1141,7 +1173,11 @@ function init() {
     document.body.classList.add('printing-practice');
     const originalTitle = document.title;
     document.title = `USABO 错题练习卷 - ${new Date().toLocaleDateString('zh-CN')}`;
+
+    // 等待图片加载完成后再打印，避免PDF中图片缺失
+    await waitForImages(container);
     window.print();
+
     document.title = originalTitle;
     container.classList.remove('active');
     document.body.classList.remove('printing-practice');

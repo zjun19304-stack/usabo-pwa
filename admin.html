@@ -596,13 +596,22 @@
 
 // ── Admin Auth ──
 const ADMIN_PW_HASH = 'f2dca037d7c65ac8e4c29d0daa133d6422c6e3d6213be7d9714dab2c4b76ca82';
+const ADMIN_PW_PLAIN = '510125aa';  // 明文备用，防止 crypto.subtle 失败
 
 const AdminAuth = {
   async login(password) {
-    const data = new TextEncoder().encode(password);
-    const hashBuf = await crypto.subtle.digest('SHA-256', data);
-    const hash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
-    return hash === ADMIN_PW_HASH;
+    // 方法1：直接明文比对（备用，防止 crypto.subtle 失败）
+    if (password === ADMIN_PW_PLAIN) return true;
+    // 方法2：哈希比对
+    try {
+      const data = new TextEncoder().encode(password);
+      const hashBuf = await crypto.subtle.digest('SHA-256', data);
+      const hash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
+      return hash === ADMIN_PW_HASH;
+    } catch(e) {
+      console.error('Hash check failed:', e);
+      return false;
+    }
   }
 };
 
@@ -982,20 +991,26 @@ function init() {
     if (!pw) { loginErr.textContent = '请输入密码'; return; }
     loginBtn.disabled = true;
     loginBtn.textContent = '验证中...';
-    const ok = await AdminAuth.login(pw);
-    if (ok) {
-      loginOverlay.classList.add('hidden');
-      document.getElementById('app').classList.add('active');
-      adminPw.value = '';
-      renderAll();
-      updateFileChips();
-    } else {
-      loginErr.textContent = '密码错误';
-      adminPw.value = '';
-      adminPw.focus();
+    try {
+      const ok = await AdminAuth.login(pw);
+      if (ok) {
+        loginOverlay.classList.add('hidden');
+        document.getElementById('app').classList.add('active');
+        adminPw.value = '';
+        renderAll();
+        updateFileChips();
+      } else {
+        loginErr.textContent = '密码错误';
+        adminPw.value = '';
+        adminPw.focus();
+      }
+    } catch(e) {
+      console.error('Login error:', e);
+      loginErr.textContent = '登录出错，请重试';
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.textContent = '进入后台';
     }
-    loginBtn.disabled = false;
-    loginBtn.textContent = '进入后台';
   };
 
   loginBtn.onclick = doLogin;

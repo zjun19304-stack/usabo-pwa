@@ -8,10 +8,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="USABO">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 
   <!-- ════════ Security Headers (via meta — GitHub Pages has no server-side headers) ════════ -->
   <!-- Content Security Policy: restrict all resource loading to same-origin -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none';">
   <!-- Referrer Policy: strip referrer on cross-origin navigations -->
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <!-- Prevent MIME-type sniffing -->
@@ -71,6 +74,10 @@
           <span class="stat-num" id="stat-wrong">0</span>
           <span class="stat-label">错题本</span>
         </div>
+      </div>
+
+      <div class="export-row">
+        <button class="btn-export" id="btn-export-data" title="导出做题记录和错题数据，发给老师查看">📤 导出我的数据</button>
       </div>
 
       <div class="section-title">

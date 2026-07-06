@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a1a2e">
+  <title>USABO 管理后台</title>
+  <style>
+    :root {
+      --bg: #0f0f1a;
+      --bg-card: #1a1a2e;
+      --bg-card-hover: #22223a;
+      --accent: #667eea;
+      --accent-glow: rgba(102,126,234,0.3);
+      --correct: #4ade80;
+      --correct-bg: rgba(74,222,128,0.15);
+      --wrong: #f87171;
+      --wrong-bg: rgba(248,113,113,0.15);
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --text-muted: #64748b;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Login ── */
+    #login-overlay {
+      position: fixed; inset:0; background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999;
+    }
+    #login-overlay.hidden { display:none; }
+    .login-card {
+      background: var(--bg-card);
+      padding: 40px;
+      border-radius: var(--radius);
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      width: 360px;
+    }
+    .login-card h1 { font-size: 22px; margin-bottom: 6px; }
+    .login-card p { color: var(--text-dim); font-size: 13px; margin-bottom: 20px; }
+    .login-card input {
+      width: 100%; padding: 12px 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.05);
+      color: var(--text); font-size: 16px;
+      text-align: center; outline: none;
+      margin-bottom: 12px;
+    }
+    .login-card input:focus { border-color: var(--accent); }
+    .login-btn {
+      width: 100%; padding: 12px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius-sm);
+      font-size: 16px; font-weight: 600;
+      cursor: pointer; transition: transform 0.15s;
+    }
+    .login-btn:hover { transform: translateY(-1px); }
+    .login-btn:active { transform: translateY(0); }
+    .login-error { color: var(--wrong); font-size: 13px; min-height: 20px; }
+
+    /* ── Layout ── */
+    #app { display:none; max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+    #app.active { display:block; }
+
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    header h1 { font-size: 24px; }
+    .header-actions { display:flex; gap:10px; }
+    .btn {
+      padding: 8px 18px; border: none; border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-accent:hover { box-shadow: 0 4px 16px var(--accent-glow); }
+    .btn-ghost {
+      background: transparent; color: var(--text-dim);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .btn-ghost:hover { border-color: rgba(255,255,255,0.3); color: var(--text); }
+    .btn-pdf {
+      background: linear-gradient(135deg, #f43f5e, #e11d48);
+      color: #fff;
+    }
+
+    /* ── Import Zone ── */
+    .import-zone {
+      border: 2px dashed rgba(255,255,255,0.15);
+      border-radius: var(--radius);
+      padding: 36px;
+      text-align: center;
+      margin-bottom: 24px;
+      transition: border-color 0.2s, background 0.2s;
+      cursor: pointer;
+    }
+    .import-zone:hover, .import-zone.drag-over {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+    .import-zone .icon { font-size: 40px; margin-bottom: 8px; }
+    .import-zone p { color: var(--text-dim); font-size: 14px; margin: 4px 0; }
+    .import-zone .hint { color: var(--text-muted); font-size: 12px; }
+    .import-zone .file-count {
+      display: inline-block; margin-top: 10px;
+      background: var(--accent); color: #fff;
+      padding: 2px 12px; border-radius: 20px;
+      font-size: 13px; font-weight: 600;
+    }
+    .import-zone .file-list {
+      margin-top: 14px; text-align: left;
+      display: flex; flex-wrap: wrap; gap: 6px;
+      justify-content: center;
+    }
+    .file-chip {
+      background: var(--bg-card-hover);
+      padding: 4px 14px; border-radius: 20px;
+      font-size: 13px; color: var(--accent);
+    }
+
+    /* ── Stats Overview ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-card .num {
+      font-size: 32px; font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-card .label {
+      font-size: 13px; color: var(--text-dim);
+      margin-top: 4px;
+    }
+    .stat-card.correct .num { color: var(--correct); }
+    .stat-card.wrong .num { color: var(--wrong); }
+
+    /* ── Student Table ── */
+    .section-title {
+      font-size: 18px; font-weight: 700;
+      margin: 24px 0 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::before {
+      content: ''; display: block;
+      width: 4px; height: 20px;
+      border-radius: 2px; background: var(--accent);
+    }
+
+    .student-table {
+      width: 100%; border-collapse: collapse;
+      background: var(--bg-card); border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .student-table th, .student-table td {
+      padding: 12px 16px; text-align: left;
+      font-size: 14px;
+    }
+    .student-table th {
+      background: rgba(255,255,255,0.04);
+      color: var(--text-dim); font-weight: 600;
+      font-size: 13px; text-transform: uppercase;
+    }
+    .student-table tr { border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .student-table tr:hover { background: var(--bg-card-hover); }
+    .student-table .name {
+      font-weight: 600; color: var(--accent);
+      cursor: pointer;
+    }
+    .student-table .name:hover { text-decoration: underline; }
+    .student-table .accuracy {
+      font-weight: 600;
+    }
+    .accuracy.high { color: var(--correct); }
+    .accuracy.mid { color: #fbbf24; }
+    .accuracy.low { color: var(--wrong); }
+
+    /* ── Student Detail Modal ── */
+    #detail-overlay {
+      position: fixed; inset:0; background: rgba(0,0,0,0.7);
+      display:flex; align-items: center; justify-content: center;
+      z-index: 10000;
+    }
+    #detail-overlay.hidden { display:none; }
+    .detail-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 28px; width: 90%; max-width: 700px; max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+    }
+    .detail-close {
+      float:right; background: none; border: none; color: var(--text-dim);
+      font-size: 22px; cursor: pointer;
+    }
+    .detail-close:hover { color: var(--wrong); }
+    .detail-name { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+    .detail-meta {
+      display: flex; gap: 20px; flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .detail-meta-item {
+      background: rgba(255,255,255,0.04);
+      padding: 10px 16px; border-radius: var(--radius-sm);
+    }
+    .detail-meta-item .v { font-size: 18px; font-weight: 700; color: var(--accent); }
+    .detail-meta-item .l { font-size: 12px; color: var(--text-muted); }
+    .detail-section {
+      margin-bottom: 16px;
+    }
+    .detail-section h3 {
+      font-size: 15px; font-weight: 600;
+      margin-bottom: 10px; color: var(--text-dim);
+    }
+    .wrong-item {
+      background: var(--wrong-bg);
+      padding: 10px 14px; border-radius: var(--radius-sm);
+      margin-bottom: 8px; font-size: 13px;
+      border-left: 3px solid var(--wrong);
+    }
+    .wrong-item .q-stem { font-weight: 600; margin-bottom: 4px; }
+    .wrong-item .q-meta { color: var(--text-muted); font-size: 12px; }
+    .history-item {
+      background: var(--bg-card-hover);
+      padding: 8px 14px; border-radius: var(--radius-sm);
+      margin-bottom: 6px; font-size: 13px;
+      display: flex; justify-content: space-between;
+    }
+    .history-item .acc {
+      font-weight: 600;
+      padding: 1px 8px; border-radius: 10px;
+    }
+    .acc.good { background: var(--correct-bg); color: var(--correct); }
+    .acc.ok { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .acc.bad { background: var(--wrong-bg); color: var(--wrong); }
+
+    /* ── Topic Breakdown ── */
+    .topic-bar-wrap {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 6px;
+    }
+    .topic-bar-label {
+      width: 80px; font-size: 13px; font-weight: 600;
+      text-align: right; flex-shrink: 0;
+    }
+    .topic-bar-track {
+      flex:1; height: 20px; background: rgba(255,255,255,0.06);
+      border-radius: 10px; overflow: hidden;
+      display: flex;
+    }
+    .topic-bar-correct {
+      height: 100%; background: var(--correct);
+      border-radius: 10px 0 0 10px;
+    }
+    .topic-bar-wrong {
+      height: 100%; background: var(--wrong);
+      border-radius: 0 10px 10px 0;
+    }
+    .topic-bar-stat {
+      width: 60px; font-size: 12px; color: var(--text-dim); text-align: left;
+      flex-shrink: 0;
+    }
+
+    /* ── Error Topic Heatmap ── */
+    .heatmap { margin-bottom: 24px; }
+    .heatmap table { width: 100%; border-collapse: collapse; }
+    .heatmap th, .heatmap td {
+      padding: 8px 12px; text-align: center; font-size: 13px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .heatmap th { background: rgba(255,255,255,0.04); color: var(--text-dim); }
+    .heatbar {
+      height: 6px; border-radius: 3px;
+      background: var(--wrong);
+      min-width: 2px; display: inline-block;
+    }
+
+    /* ── Print Styles ── */
+    @media print {
+      body { background: #fff; color: #000; }
+      header, .import-zone, .btn, .header-actions, #detail-overlay, .section-title::before {
+        display: none !important;
+      }
+      .student-table { background: #fff; border: 1px solid #ddd; }
+      .student-table th { background: #f5f5f5; color: #333; }
+      .student-table td { color: #333; }
+      .student-table tr { border-bottom: 1px solid #ddd; }
+      .student-table .name { color: #333; }
+      .stats-grid { page-break-inside: avoid; }
+      .stat-card { background: #f8f9fa; border: 1px solid #ddd; }
+      .stat-card .num { color: #667eea; }
+      .stat-card.correct .num { color: #16a34a; }
+      .stat-card.wrong .num { color: #dc2626; }
+      .section-title { color: #333; }
+      .topic-bar-correct { background: #16a34a; }
+      .topic-bar-wrong { background: #dc2626; }
+      .topic-bar-track { background: #f0f0f0; }
+      .heatbar { background: #dc2626; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Login Overlay ── -->
+<div id="login-overlay">
+  <div class="login-card">
+    <h1>🧬 USABO 管理后台</h1>
+    <p>请输入管理员密码</p>
+    <input type="password" id="admin-password" placeholder="管理员密码" autocomplete="off">
+    <p class="login-error" id="admin-error"></p>
+    <button class="login-btn" id="admin-login-btn">进入后台</button>
+    <p style="font-size:12px;color:var(--text-muted);margin-top:12px;">
+      提醒学生点击首页「📤 导出我的数据」按钮<br>将导出的 JSON 文件发给你
+    </p>
+  </div>
+</div>
+
+<!-- ── Main App ── -->
+<div id="app">
+  <header>
+    <h1>📊 学生做题记录总览</h1>
+    <div class="header-actions">
+      <button class="btn btn-ghost" id="btn-clear-data">清空已导入数据</button>
+      <button class="btn btn-pdf" id="btn-export-pdf">📄 导出 PDF</button>
+    </div>
+  </header>
+
+  <!-- Import Zone -->
+  <div class="import-zone" id="import-zone">
+    <div class="icon">📂</div>
+    <p><strong>拖拽或点击导入学生数据文件</strong></p>
+    <p class="hint">支持一次选择多个 .json 文件（学生通过 App 导出的数据）</p>
+    <input type="file" id="file-input" multiple accept=".json" style="display:none;">
+    <div class="file-list" id="file-list"></div>
+  </div>
+
+  <!-- Overview Stats -->
+  <div class="stats-grid" id="overview-stats">
+    <div class="stat-card">
+      <div class="num" id="ov-students">0</div>
+      <div class="label">已导入学生</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="ov-total">0</div>
+      <div class="label">总做题量</div>
+    </div>
+    <div class="stat-card correct">
+      <div class="num" id="ov-accuracy">0%</div>
+      <div class="label">整体正确率</div>
+    </div>
+    <div class="stat-card wrong">
+      <div class="num" id="ov-wrongs">0</div>
+      <div class="label">错题总数</div>
+    </div>
+  </div>
+
+  <!-- Student Table -->
+  <div class="section-title">学生列表</div>
+  <div style="overflow-x:auto;">
+    <table class="student-table">
+      <thead>
+        <tr>
+          <th>学生</th>
+          <th>做题量</th>
+          <th>正确率</th>
+          <th>错题数</th>
+          <th>练习次数</th>
+          <th>最近导出</th>
+        </tr>
+      </thead>
+      <tbody id="student-tbody"></tbody>
+    </table>
+  </div>
+  <p id="no-data-msg" style="text-align:center;color:var(--text-muted);padding:40px;">
+    还没有导入任何学生数据<br>
+    <span style="font-size:13px;">让学生点击 App 首页的「📤 导出我的数据」按钮，然后把文件发给你拖进来</span>
+  </p>
+
+  <!-- Topic Breakdown -->
+  <div class="section-title">各板块正确率分布</div>
+  <div id="topic-breakdown" style="background:var(--bg-card);border-radius:var(--radius);padding:20px;"></div>
+
+  <!-- Error Heatmap -->
+  <div class="section-title">各板块错题分布（横向对比）</div>
+  <div class="heatmap" style="overflow-x:auto;">
+    <table>
+      <thead id="heatmap-head"></thead>
+      <tbody id="heatmap-body"></tbody>
+    </table>
+  </div>
+  <p id="heatmap-msg" style="text-align:center;color:var(--text-muted);">导入学生数据后显示对比</p>
+</div>
+
+<!-- ── Student Detail Modal ── -->
+<div id="detail-overlay" class="hidden">
+  <div class="detail-card" id="detail-content"></div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════
+   USABO Admin Backend — 做题记录管理与 PDF 导出
+   ════════════════════════════════════════════════════════ */
+'use strict';
+
+// ── Admin Auth ──
+const ADMIN_PW_HASH = 'f2dca037d7c65ac8e4c29d0daa133d6422c6e3d6213be7d9714dab2c4b76ca82';
+
+const AdminAuth = {
+  async login(password) {
+    const data = new TextEncoder().encode(password);
+    const hashBuf = await crypto.subtle.digest('SHA-256', data);
+    const hash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    return hash === ADMIN_PW_HASH;
+  }
+};
+
+// ── Data Store (sessionStorage to survive page reloads in same tab) ──
+const AdminStore = {
+  _key: 'usabo_admin_students',
+  students: [],
+  init() {
+    try {
+      const raw = sessionStorage.getItem(this._key);
+      this.students = raw ? JSON.parse(raw) : [];
+    } catch { this.students = []; }
+  },
+  save() {
+    sessionStorage.setItem(this._key, JSON.stringify(this.students));
+  },
+  add(data) {
+    // Remove existing entry for same student
+    this.students = this.students.filter(s => s.student !== data.student);
+    this.students.push(data);
+    this.students.sort((a,b) => a.student.localeCompare(b.student));
+    this.save();
+  },
+  clear() {
+    this.students = [];
+    sessionStorage.removeItem(this._key);
+  },
+  get(studentName) {
+    return this.students.find(s => s.student === studentName);
+  },
+  getAll() {
+    return [...this.students];
+  },
+  getAggregatedStats() {
+    const all = this.students;
+    let totalQ = 0, totalC = 0, totalW = 0;
+    all.forEach(s => {
+      s.history.forEach(h => {
+        totalQ += h.total || 0;
+        totalC += h.correct || 0;
+      });
+      totalW += (s.wrongAnswers || []).length;
+    });
+    return {
+      studentCount: all.length,
+      totalQuestions: totalQ,
+      totalCorrect: totalC,
+      accuracy: totalQ > 0 ? Math.round((totalC / totalQ) * 100) : 0,
+      totalWrongs: totalW,
+    };
+  },
+
+  // Topic-level aggregation across all students
+  getTopicStats() {
+    const topicMap = {};
+    this.students.forEach(s => {
+      // From history records
+      s.history.forEach(h => {
+        if (!h.topicBreakdown) return;
+        Object.entries(h.topicBreakdown).forEach(([topic, tb]) => {
+          if (!topicMap[topic]) topicMap[topic] = { correct:0, total:0 };
+          topicMap[topic].correct += tb.correct || 0;
+          topicMap[topic].total += tb.total || 0;
+        });
+      });
+      // Count wrong answers by topic
+      (s.wrongAnswers || []).forEach(w => {
+        const t = w.topic || 'Unknown';
+        if (!topicMap[t]) topicMap[t] = { correct:0, total:0, wrongCount:0 };
+        topicMap[t].wrongCount = (topicMap[t].wrongCount || 0) + 1;
+      });
+    });
+    return topicMap;
+  },
+
+  getStudentTopicWrongs(studentName) {
+    const s = this.students.find(x => x.student === studentName);
+    if (!s) return {};
+    const map = {};
+    (s.wrongAnswers || []).forEach(w => {
+      const t = w.topic || 'Unknown';
+      map[t] = (map[t] || 0) + 1;
+    });
+    return map;
+  }
+};
+
+// ── UI Helper ──
+function accClass(pct) {
+  if (pct >= 80) return 'high';
+  if (pct >= 60) return 'mid';
+  return 'low';
+}
+function accLabel(pct) {
+  if (pct >= 80) return 'good';
+  if (pct >= 60) return 'ok';
+  return 'bad';
+}
+function fmtDate(iso) {
+  if (!iso) return '-';
+  try { return new Date(iso).toLocaleDateString('zh-CN'); }
+  catch { return iso.slice(0,10); }
+}
+
+// ── Render ──
+function renderAll() {
+  renderStats();
+  renderStudentTable();
+  renderTopicBreakdown();
+  renderHeatmap();
+}
+
+function renderStats() {
+  const st = AdminStore.getAggregatedStats();
+  document.getElementById('ov-students').textContent = st.studentCount;
+  document.getElementById('ov-total').textContent = st.totalQuestions;
+  document.getElementById('ov-accuracy').textContent = st.accuracy + '%';
+  document.getElementById('ov-wrongs').textContent = st.totalWrongs;
+}
+
+function renderStudentTable() {
+  const tb = document.getElementById('student-tbody');
+  const msg = document.getElementById('no-data-msg');
+  const students = AdminStore.getAll();
+
+  if (students.length === 0) {
+    tb.innerHTML = '';
+    msg.style.display = 'block';
+    return;
+  }
+  msg.style.display = 'none';
+
+  tb.innerHTML = students.map(s => {
+    let total = 0, correct = 0;
+    s.history.forEach(h => { total += h.total || 0; correct += h.correct || 0; });
+    const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+    const wrongCount = (s.wrongAnswers || []).length;
+    const practiceCount = s.history.length;
+    const lastDate = s.exportedAt ? fmtDate(s.exportedAt) : '-';
+    return `<tr>
+      <td><span class="name" onclick="showDetail('${escapeHTML(s.student)}')">${escapeHTML(s.student)}</span></td>
+      <td>${total}</td>
+      <td><span class="accuracy ${accClass(pct)}">${pct}%</span></td>
+      <td>${wrongCount}</td>
+      <td>${practiceCount}</td>
+      <td style="color:var(--text-muted);font-size:12px;">${lastDate}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTopicBreakdown() {
+  const container = document.getElementById('topic-breakdown');
+  const topicMap = AdminStore.getTopicStats();
+  const entries = Object.entries(topicMap).sort((a,b) => {
+    // Sort by total questions descending
+    return (b[1].total || 0) - (a[1].total || 0);
+  });
+
+  if (entries.length === 0) {
+    container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px;">暂无数据</p>';
+    return;
+  }
+
+  container.innerHTML = entries.map(([topic, stats]) => {
+    const total = stats.total || 0;
+    const correct = stats.correct || 0;
+    const wrong = total - correct;
+    const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+    const correctW = total > 0 ? (correct / total) * 100 : 0;
+    const wrongW = total > 0 ? (wrong / total) * 100 : 0;
+    return `<div class="topic-bar-wrap">
+      <span class="topic-bar-label">${escapeHTML(topic)}</span>
+      <div class="topic-bar-track">
+        <div class="topic-bar-correct" style="width:${correctW}%"></div>
+        <div class="topic-bar-wrong" style="width:${wrongW}%"></div>
+      </div>
+      <span class="topic-bar-stat">${total}题 · ${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+function renderHeatmap() {
+  const head = document.getElementById('heatmap-head');
+  const body = document.getElementById('heatmap-body');
+  const msg = document.getElementById('heatmap-msg');
+  const students = AdminStore.getAll();
+
+  if (students.length === 0) {
+    head.innerHTML = ''; body.innerHTML = '';
+    msg.style.display = 'block';
+    return;
+  }
+  msg.style.display = 'none';
+
+  // Collect all topics
+  const allTopics = new Set();
+  students.forEach(s => {
+    const tw = AdminStore.getStudentTopicWrongs(s.student);
+    Object.keys(tw).forEach(t => allTopics.add(t));
+  });
+  const topics = [...allTopics].sort();
+
+  // Build heatmap header
+  head.innerHTML = `<tr><th style="text-align:left;width:100px;">板块</th>${students.map(s =>
+    `<th>${escapeHTML(s.student)}</th>`
+  ).join('')}<th style="color:var(--text-muted);">合计</th></tr>`;
+
+  const maxVal = Math.max(1, ...topics.map(t => {
+    let sum = 0;
+    students.forEach(s => {
+      const tw = AdminStore.getStudentTopicWrongs(s.student);
+      sum += tw[t] || 0;
+    });
+    return sum;
+  }));
+
+  body.innerHTML = topics.map(topic => {
+    const cells = students.map(s => {
+      const tw = AdminStore.getStudentTopicWrongs(s.student);
+      const v = tw[topic] || 0;
+      const w = (v / maxVal) * 100;
+      return `<td>${v > 0 ? `<span class="heatbar" style="width:${Math.max(w, 2)}px"></span> ${v}` : '-'}</td>`;
+    });
+    let totalCol = 0;
+    students.forEach(s => {
+      const tw = AdminStore.getStudentTopicWrongs(s.student);
+      totalCol += tw[topic] || 0;
+    });
+    return `<tr><td style="text-align:left;font-weight:600;">${escapeHTML(topic)}</td>${cells.join('')}<td style="font-weight:600;color:var(--wrong);">${totalCol}</td></tr>`;
+  }).join('');
+}
+
+// ── Escape ──
+function escapeHTML(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// ── Student Detail Modal ──
+function showDetail(name) {
+  const s = AdminStore.get(name);
+  if (!s) return;
+
+  let total = 0, correct = 0;
+  s.history.forEach(h => { total += h.total || 0; correct += h.correct || 0; });
+  const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+  const wrongs = s.wrongAnswers || [];
+
+  document.getElementById('detail-content').innerHTML = `
+    <button class="detail-close" onclick="closeDetail()">✕</button>
+    <div class="detail-name">${escapeHTML(s.student)} 详细记录</div>
+    <div class="detail-meta">
+      <div class="detail-meta-item">
+        <div class="v">${total}</div><div class="l">总做题量</div>
+      </div>
+      <div class="detail-meta-item">
+        <div class="v">${pct}%</div><div class="l">正确率</div>
+      </div>
+      <div class="detail-meta-item">
+        <div class="v">${wrongs.length}</div><div class="l">错题数</div>
+      </div>
+      <div class="detail-meta-item">
+        <div class="v">${s.history.length}</div><div class="l">练习次数</div>
+      </div>
+      <div class="detail-meta-item">
+        <div class="v">${fmtDate(s.exportedAt)}</div><div class="l">数据导出时间</div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h3>📋 练习记录</h3>
+      ${s.history.slice().reverse().map(h => {
+        const acc = h.total > 0 ? Math.round((h.correct/h.total)*100) : 0;
+        return `<div class="history-item">
+          <span>${fmtDate(h.date || h.timestamp)} · ${h.total || 0}题 · 主题: ${h.topic || '-'}</span>
+          <span class="acc ${accLabel(acc)}">${acc}%</span>
+        </div>`;
+      }).join('') || '<p style="color:var(--text-muted);">暂无练习记录</p>'}
+    </div>
+    <div class="detail-section">
+      <h3>📝 错题本 (${wrongs.length}题)</h3>
+      ${wrongs.map(w => `
+        <div class="wrong-item">
+          <div class="q-stem">[${escapeHTML(w.id || '?')}] ${escapeHTML(w.stem || '无题目文本')}</div>
+          <div class="q-meta">
+            板块: ${escapeHTML(w.topic || '-')} ·
+            你的答案: ${Array.isArray(w.yourAnswer) ? w.yourAnswer.join(', ') : w.yourAnswer} ·
+            正确答案: ${Array.isArray(w.answer) ? w.answer.join(', ') : w.answer}
+          </div>
+        </div>
+      `).join('') || '<p style="color:var(--text-muted);">暂无错题 🎉</p>'}
+    </div>
+  `;
+
+  document.getElementById('detail-overlay').classList.remove('hidden');
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.add('hidden');
+}
+
+// ── File Import ──
+function handleFiles(files) {
+  const names = [];
+  Array.from(files).forEach(file => {
+    if (!file.name.endsWith('.json')) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (data.student && data.history && data.wrongAnswers) {
+          AdminStore.add(data);
+          names.push(data.student);
+          renderAll();
+          updateFileChips();
+        }
+      } catch (ex) {
+        alert(`文件 ${file.name} 解析失败: ${ex.message}`);
+      }
+    };
+    reader.readAsText(file);
+  });
+}
+
+function updateFileChips() {
+  const list = document.getElementById('file-list');
+  const students = AdminStore.getAll();
+  if (students.length === 0) {
+    list.innerHTML = '';
+    return;
+  }
+  list.innerHTML = students.map(s =>
+    `<span class="file-chip">${escapeHTML(s.student)}</span>`
+  ).join('');
+}
+
+// ── Event Bindings ──
+function init() {
+  AdminStore.init();
+
+  // Login
+  const loginOverlay = document.getElementById('login-overlay');
+  const adminPw = document.getElementById('admin-password');
+  const loginErr = document.getElementById('admin-error');
+  const loginBtn = document.getElementById('admin-login-btn');
+
+  const doLogin = async () => {
+    const pw = adminPw.value.trim();
+    if (!pw) { loginErr.textContent = '请输入密码'; return; }
+    loginBtn.disabled = true;
+    loginBtn.textContent = '验证中...';
+    const ok = await AdminAuth.login(pw);
+    if (ok) {
+      loginOverlay.classList.add('hidden');
+      document.getElementById('app').classList.add('active');
+      adminPw.value = '';
+      renderAll();
+      updateFileChips();
+    } else {
+      loginErr.textContent = '密码错误';
+      adminPw.value = '';
+      adminPw.focus();
+    }
+    loginBtn.disabled = false;
+    loginBtn.textContent = '进入后台';
+  };
+
+  loginBtn.onclick = doLogin;
+  adminPw.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  // Import zone
+  const zone = document.getElementById('import-zone');
+  const fileInput = document.getElementById('file-input');
+
+  zone.onclick = () => fileInput.click();
+  zone.ondragover = (e) => { e.preventDefault(); zone.classList.add('drag-over'); };
+  zone.ondragleave = () => zone.classList.remove('drag-over');
+  zone.ondrop = (e) => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    handleFiles(e.dataTransfer.files);
+  };
+  fileInput.onchange = () => {
+    handleFiles(fileInput.files);
+    fileInput.value = '';
+  };
+
+  // Clear data
+  document.getElementById('btn-clear-data').onclick = () => {
+    if (confirm('确定要清空所有已导入的学生数据吗？此操作不可撤销。')) {
+      AdminStore.clear();
+      renderAll();
+      updateFileChips();
+    }
+  };
+
+  // Export PDF
+  document.getElementById('btn-export-pdf').onclick = () => {
+    // Create a clean print version
+    const title = 'USABO 学生做题记录报告';
+    document.title = title;
+    window.print();
+    document.title = 'USABO 管理后台';
+  };
+
+  // Close detail modal on overlay click
+  document.getElementById('detail-overlay').onclick = (e) => {
+    if (e.target === document.getElementById('detail-overlay')) {
+      closeDetail();
+    }
+  };
+
+  // Check if already logged in (session)
+  if (sessionStorage.getItem('usabo_admin_logged')) {
+    loginOverlay.classList.add('hidden');
+    document.getElementById('app').classList.add('active');
+    renderAll();
+    updateFileChips();
+  } else {
+    // Auto-focus password
+    setTimeout(() => adminPw.focus(), 300);
+  }
+
+  // Remember login state
+  const origLogin = AdminAuth.login;
+  AdminAuth.login = async function(pw) {
+    const result = await origLogin.call(this, pw);
+    if (result) sessionStorage.setItem('usabo_admin_logged', '1');
+    return result;
+  };
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>

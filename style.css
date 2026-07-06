@@ -133,6 +133,33 @@ body {
   border-color: var(--c-wrong);
 }
 
+/* ── 导出按钮 ── */
+.export-row {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.btn-export {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-export:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-export:active {
+  transform: translateY(0);
+}
+
 /* ── 统计栏 ── */
 .stats-bar {
   display: flex;

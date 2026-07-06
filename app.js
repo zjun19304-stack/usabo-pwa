@@ -123,6 +123,30 @@ const Storage = {
   getSession() { return this.get(this.KEYS.session, null); },
   saveSession(s) { this.set(this.KEYS.session, s); },
   clearSession() { this.remove(this.KEYS.session); },
+
+  // ── 数据导出（供管理员查看）──
+  exportData(studentName) {
+    const history = this.getHistory();
+    const wrong = this.getWrong();
+    const now = new Date().toISOString().slice(0, 10);
+    const data = {
+      student: studentName || 'unknown',
+      exportedAt: new Date().toISOString(),
+      history: history,
+      wrongAnswers: wrong,
+    };
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `usabo-data-${data.student}-${now}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    return data;
+  },
 };
 
 // ════════════════════════════════════════════════════════
@@ -283,6 +307,11 @@ const HomeView = {
     document.getElementById('btn-wrong-book').onclick = () => {
       Router.navigate('#/wrong');
     };
+
+    // 导出数据
+    document.getElementById('btn-export-data').onclick = () => {
+      Storage.exportData(Auth.currentStudent);
+    };
   },
 
   startPractice() {
@@ -375,9 +404,9 @@ const PracticeView = {
       const safe = safeUrl(q.image);
       imgEl.src = safe;
       imgEl.alt = q.stem;
-      imgWrap.style.display = 'block';
+      imgWrap.classList.remove('hidden');
     } else {
-      imgWrap.style.display = 'none';
+      imgWrap.classList.add('hidden');
       imgEl.src = '';
     }
 

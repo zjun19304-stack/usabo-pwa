@@ -98,6 +98,92 @@
       background: linear-gradient(135deg, #f43f5e, #e11d48);
       color: #fff;
     }
+    .btn-wrong-pdf {
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      color: #fff;
+    }
+
+    /* ── Wrong Questions Print Export ── */
+    #wrong-export {
+      display: none;
+      background: #fff;
+      color: #000;
+      padding: 40px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    #wrong-export.active {
+      display: block;
+    }
+    .we-student-title {
+      font-size: 20px; font-weight: 700;
+      border-bottom: 2px solid #333;
+      padding-bottom: 8px; margin: 24px 0 16px;
+    }
+    .we-student-title:first-child { margin-top: 0; }
+    .we-question {
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #eee;
+      page-break-inside: avoid;
+    }
+    .we-q-meta {
+      color: #666; font-size: 12px; margin-bottom: 6px;
+    }
+    .we-stem {
+      font-weight: 600; margin-bottom: 8px;
+    }
+    .we-options {
+      margin: 8px 0 8px 20px;
+    }
+    .we-option {
+      margin: 2px 0;
+      padding: 2px 0;
+    }
+    .we-option.correct {
+      background: #dcfce7;
+      font-weight: 600;
+    }
+    .we-answer-row {
+      display: flex; gap: 24px; margin: 8px 0;
+      font-size: 13px;
+    }
+    .we-answer-row .wrong-ans { color: #dc2626; font-weight: 600; }
+    .we-answer-row .right-ans { color: #16a34a; font-weight: 600; }
+    .we-explain {
+      background: #f8f9fa;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #333;
+      white-space: pre-wrap;
+    }
+    .we-q-image {
+      max-width: 100%;
+      max-height: 200px;
+      margin: 8px 0;
+    }
+    .we-empty {
+      text-align: center; color: #999; padding: 40px;
+    }
+    .we-cover {
+      text-align: center; padding: 60px 20px;
+      border-bottom: 2px solid #333; margin-bottom: 30px;
+    }
+    .we-cover h2 { font-size: 26px; margin-bottom: 8px; }
+    .we-cover p { color: #666; font-size: 13px; }
+
+    @media print {
+      #login-overlay, #app, #detail-overlay, header, .btn { display: none !important; }
+      #wrong-export {
+        display: block !important;
+        position: static;
+      }
+      body { background: #fff; color: #000; }
+      .we-question { page-break-inside: avoid; }
+      .we-student-title { page-break-after: avoid; }
+    }
 
     /* ── Import Zone ── */
     .import-zone {
@@ -343,7 +429,8 @@
     <h1>📊 学生做题记录总览</h1>
     <div class="header-actions">
       <button class="btn btn-ghost" id="btn-clear-data">清空已导入数据</button>
-      <button class="btn btn-pdf" id="btn-export-pdf">📄 导出 PDF</button>
+      <button class="btn btn-wrong-pdf" id="btn-export-wrong-pdf">📝 导出错题PDF</button>
+      <button class="btn btn-pdf" id="btn-export-pdf">📄 导出统计PDF</button>
     </div>
   </header>
 
@@ -831,6 +918,69 @@ function init() {
     }
   };
 
+  // Export wrong questions PDF
+  document.getElementById('btn-export-wrong-pdf').onclick = () => {
+    const container = document.getElementById('wrong-export');
+    const students = AdminStore.getAll();
+    if (students.length === 0) {
+      alert('请先导入学生数据');
+      return;
+    }
+
+    let html = '';
+    const totalWrongs = students.reduce((sum, s) => sum + (s.wrongAnswers || []).length, 0);
+    html += `<div class="we-cover">
+      <h2>USABO 学生错题汇总</h2>
+      <p>共 ${students.length} 名学生 · ${totalWrongs} 道错题</p>
+      <p>生成时间：${new Date().toLocaleString('zh-CN')}</p>
+    </div>`;
+
+    students.forEach(s => {
+      const wrongs = s.wrongAnswers || [];
+      html += `<div class="we-student-title">学生：${escapeHTML(s.student)}（${wrongs.length} 道错题）</div>`;
+      if (wrongs.length === 0) {
+        html += `<div class="we-empty">该学生暂无错题 🎉</div>`;
+        return;
+      }
+      wrongs.forEach((w, idx) => {
+        const optionsHtml = (w.options || []).map(opt => {
+          const isCorrect = (w.answer || []).includes(opt.key);
+          return `<div class="we-option ${isCorrect ? 'correct' : ''}">${opt.key}. ${escapeHTML(opt.text || '')}</div>`;
+        }).join('');
+        const imgHtml = w.image ? `<img class="we-q-image" src="${escapeHTML(w.image)}" alt="题目图片">` : '';
+        html += `
+          <div class="we-question">
+            <div class="we-q-meta">${idx + 1}. [${escapeHTML(w.id || '?')}] 板块：${escapeHTML(w.topic || '-')}</div>
+            <div class="we-stem">${escapeHTML(w.stem || '无题目文本')}</div>
+            ${imgHtml}
+            <div class="we-options">${optionsHtml}</div>
+            <div class="we-answer-row">
+              <span class="wrong-ans">学生答案：${escapeHTML(formatAnswer(w.yourAnswer))}</span>
+              <span class="right-ans">正确答案：${escapeHTML(formatAnswer(w.answer))}</span>
+            </div>
+            ${w.explain ? `<div class="we-explain"><strong>解析：</strong>${escapeHTML(w.explain)}</div>` : ''}
+          </div>
+        `;
+      });
+    });
+
+    container.innerHTML = html;
+    container.classList.add('active');
+
+    // Print, then restore after print dialog
+    const originalTitle = document.title;
+    document.title = `USABO 错题汇总 - ${new Date().toLocaleDateString('zh-CN')}`;
+    window.print();
+    document.title = originalTitle;
+    container.classList.remove('active');
+  };
+
+  function formatAnswer(ans) {
+    if (!ans) return '未作答';
+    if (Array.isArray(ans)) return ans.length ? ans.join('、') : '未作答';
+    return String(ans);
+  }
+
   // Export PDF
   document.getElementById('btn-export-pdf').onclick = () => {
     // Create a clean print version
@@ -869,6 +1019,9 @@ function init() {
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
+
+<!-- ── Wrong Questions Export View (Print/PDF) ── -->
+<div id="wrong-export"></div>
 
 </body>
 </html>

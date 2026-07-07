@@ -14,6 +14,7 @@ import json
 import zipfile
 from docx import Document
 from docx.table import Table
+from docx.text.paragraph import Paragraph
 
 DOCX_PATH = sys.argv[1] if len(sys.argv) > 1 else 'F:/PBL项目学习/小程序开发/USABO第七讲MeiosisandHereditaryLaw题目修改0705更新.docx'
 QS_PATH = sys.argv[2] if len(sys.argv) > 2 else '../questions.js'
@@ -23,6 +24,24 @@ TWO_LETTER_OPT = re.compile(r'^([A-Fa-f]){2}[\.\、\)]\s*(.*)')  # AB. AC. AD. e
 
 # Unicode superscript digits for converting Word superscripts
 SUPERSCRIPT_MAP = str.maketrans('0123456789+-=()', '⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾')
+SUPERSCRIPT_CHARS = set('⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾')
+
+
+def clean_caret_superscript(text):
+    """Remove ^ when immediately followed by Unicode superscript characters.
+    e.g. '2^³⁴' -> '2³⁴', '34^²' -> '34²'"""
+    result = []
+    i = 0
+    while i < len(text):
+        if text[i] == '^' and i + 1 < len(text) and text[i + 1] in SUPERSCRIPT_CHARS:
+            i += 1  # skip the ^
+            while i < len(text) and text[i] in SUPERSCRIPT_CHARS:
+                result.append(text[i])
+                i += 1
+        else:
+            result.append(text[i])
+            i += 1
+    return ''.join(result)
 
 
 def cell_text_with_superscript(cell):
@@ -35,8 +54,22 @@ def cell_text_with_superscript(cell):
             if run.font.superscript:
                 txt = txt.translate(SUPERSCRIPT_MAP)
             para_parts.append(txt)
-        parts.append(''.join(para_parts))
+        joined = ''.join(para_parts)
+        parts.append(clean_caret_superscript(joined))
     return '\n'.join(parts)
+
+
+def paragraph_text_with_superscript(p_element, doc):
+    """Extract paragraph text from XML element, preserving superscripts."""
+    para = Paragraph(p_element, doc)
+    parts = []
+    for run in para.runs:
+        txt = run.text or ''
+        if run.font.superscript:
+            txt = txt.translate(SUPERSCRIPT_MAP)
+        parts.append(txt)
+    text = ''.join(parts)
+    return clean_caret_superscript(text)
 
 
 def extract_lines_from_docx(filepath):
@@ -48,7 +81,7 @@ def extract_lines_from_docx(filepath):
         tag = child.tag.split('}')[-1] if '}' in child.tag else child.tag
         
         if tag == 'p':
-            text = ''.join(n.text or '' for n in child.iter() if n.tag.endswith('}t'))
+            text = paragraph_text_with_superscript(child, doc)
             lines.append(text)
         
         elif tag == 'tbl':

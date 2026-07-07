@@ -400,10 +400,16 @@ const PracticeView = {
     // 图片（如果题目有配图）
     const imgWrap = document.getElementById('q-image-wrap');
     const imgEl = document.getElementById('q-image');
+    imgEl.onerror = null;
     if (q.image) {
       const safe = safeUrl(q.image);
       imgEl.src = safe;
       imgEl.alt = q.stem;
+      // 图片加载失败时隐藏图片区域，避免显示裂图+alt文本
+      imgEl.onerror = () => {
+        imgWrap.classList.add('hidden');
+        imgEl.onerror = null;
+      };
       imgWrap.classList.remove('hidden');
     } else {
       imgWrap.classList.add('hidden');

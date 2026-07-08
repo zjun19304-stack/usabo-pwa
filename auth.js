@@ -301,12 +301,13 @@ const Auth = {
    */
   logout() {
     this.clearSession();
-    // Clear app localStorage data (history, wrong answers, settings)
+    // 只清除当前学生的本地数据，不影响其他学生
     try {
-      localStorage.removeItem('usabo_wrong_answers');
-      localStorage.removeItem('usabo_practice_history');
-      localStorage.removeItem('usabo_current_session');
-      localStorage.removeItem('usabo_settings');
+      const s = (this.currentStudent || 'unknown').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+      localStorage.removeItem(`usabo_wrong_answers_${s}`);
+      localStorage.removeItem(`usabo_practice_history_${s}`);
+      localStorage.removeItem(`usabo_current_session_${s}`);
+      localStorage.removeItem(`usabo_settings_${s}`);
     } catch {}
     location.reload();
   },

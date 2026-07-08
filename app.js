@@ -57,35 +57,65 @@ function getQuestionsByTopics(topicKeys) {
 }
 
 // ════════════════════════════════════════════════════════
-//  3. 存储层 (localStorage)
+//  3. 存储层 (localStorage) — 按学生隔离
 // ════════════════════════════════════════════════════════
 
 const Storage = {
-  KEYS: {
-    wrong: 'usabo_wrong_answers',
-    history: 'usabo_practice_history',
-    session: 'usabo_current_session',
-    settings: 'usabo_settings',
+  _student: '',
+  _keys: {},
+
+  /** 切换当前学生，localStorage key 会带上学生名后缀 */
+  setStudent(name) {
+    this._student = (name || 'unknown').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    const s = this._student;
+    this._keys = {
+      wrong:   `usabo_wrong_answers_${s}`,
+      history: `usabo_practice_history_${s}`,
+      session: `usabo_current_session_${s}`,
+      settings:`usabo_settings_${s}`,
+    };
+    // 如果旧版公用数据存在，迁移到当前学生名下（仅执行一次）
+    this._migrateOnce();
   },
 
-  get(key, fallback) {
+  /** 将旧的无后缀公用数据迁移到当前学生名下 */
+  _migrateOnce() {
+    if (localStorage.getItem('usabo_migrated_v2')) return;
+    const oldKeys = ['usabo_wrong_answers', 'usabo_practice_history', 'usabo_current_session', 'usabo_settings'];
+    oldKeys.forEach(oldKey => {
+      const val = localStorage.getItem(oldKey);
+      if (val) {
+        // 找到对应的新 key
+        const type = oldKey.replace('usabo_', '').replace('wrong_answers', 'wrong').replace('practice_history', 'history').replace('current_session', 'session');
+        if (this._keys[type]) {
+          localStorage.setItem(this._keys[type], val);
+        }
+        localStorage.removeItem(oldKey);
+      }
+    });
+    localStorage.setItem('usabo_migrated_v2', '1');
+  },
+
+  _k(type) { return this._keys[type] || `usabo_${type}`; },
+
+  get(type, fallback) {
     try {
-      const v = localStorage.getItem(key);
+      const v = localStorage.getItem(this._k(type));
       return v ? JSON.parse(v) : fallback;
     } catch { return fallback; }
   },
 
-  set(key, val) {
-    try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  set(type, val) {
+    try { localStorage.setItem(this._k(type), JSON.stringify(val)); } catch {}
   },
 
-  remove(key) {
-    try { localStorage.removeItem(key); } catch {}
+  remove(type) {
+    try { localStorage.removeItem(this._k(type)); } catch {}
   },
 
   // ── 错题本 ──
-  getWrong() { return this.get(this.KEYS.wrong, []); },
-  saveWrong(arr) { this.set(this.KEYS.wrong, arr); },
+  getWrong() { return this.get('wrong', []); },
+  saveWrong(arr) { this.set('wrong', arr); },
   addWrong(question, selected) {
     const wrong = this.getWrong();
     if (!wrong.find(w => w.id === question.id)) {
@@ -111,18 +141,18 @@ const Storage = {
   },
 
   // ── 历史记录 ──
-  getHistory() { return this.get(this.KEYS.history, []); },
+  getHistory() { return this.get('history', []); },
   addHistory(record) {
     const h = this.getHistory();
     h.unshift(record);
     if (h.length > 100) h.length = 100;
-    this.set(this.KEYS.history, h);
+    this.set('history', h);
   },
 
   // ── 会话进度 ──
-  getSession() { return this.get(this.KEYS.session, null); },
-  saveSession(s) { this.set(this.KEYS.session, s); },
-  clearSession() { this.remove(this.KEYS.session); },
+  getSession() { return this.get('session', null); },
+  saveSession(s) { this.set('session', s); },
+  clearSession() { this.remove('session'); },
 
   // ── 数据导出（供管理员查看）──
   exportData(studentName) {
@@ -948,6 +978,9 @@ const PWA = {
 // ════════════════════════════════════════════════════════
 
 window.addEventListener('auth:ready', () => {
+  // 按学生隔离存储
+  Storage.setStudent(Auth.currentStudent);
+
   PWA.init();
   Router.init();
 
